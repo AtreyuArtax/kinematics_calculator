@@ -439,6 +439,45 @@
     #startStopButton:active, #resetButton:active {
       transform: scale(0.98);
     }
+
+    /* Style for object input sections */
+    .object-input-section {
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        margin-top: 1.5rem;
+        background-color: var(--input-bg);
+    }
+
+    .object-input-section h3 {
+        font-size: 1.1rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+    }
+
+    .add-object-button {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.95rem;
+        border: 1px solid var(--primary-color);
+        border-radius: var(--border-radius);
+        background-color: var(--primary-color);
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+        font-weight: 500;
+        margin-top: 1.5rem;
+        display: block; /* Make it a block element to center or control layout */
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .add-object-button:hover {
+        background-color: #004494;
+        border-color: #004494;
+    }
+
   </style>
 </head>
 <body>
@@ -454,6 +493,8 @@
             <label for="mode2D">2D</label>
             <input type="radio" name="mode" id="modeDesign" value="design" />
             <label for="modeDesign">Design</label>
+            <input type="radio" name="mode" id="modeMultiObject1D" value="multiObject1D" />
+            <label for="modeMultiObject1D">Multi-Object 1D</label>
           </div>
         </div>
         <div id="oneDInputs">
@@ -517,6 +558,63 @@
             <input type="number" id="landingAngle" placeholder="e.g., -30" />
           </div>
         </div>
+
+        <!-- NEW: Multi-Object 1D Inputs -->
+        <div id="multiObject1DInputs" class="hidden">
+            <p class="note">Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.</p>
+
+            <div class="object-input-section">
+                <h3>Object 1</h3>
+                <div class="form-group">
+                    <label for="obj1_x0">Initial Position, x<sub>0</sub> <span class="unit">(m)</span></label>
+                    <input type="number" id="obj1_x0" placeholder="e.g., 0" value="0" />
+                </div>
+                <div class="form-group">
+                    <label for="obj1_v0">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
+                    <input type="number" id="obj1_v0" placeholder="e.g., 10" />
+                </div>
+                <div class="form-group">
+                    <label for="obj1_a">Acceleration, a <span class="unit">(m/s²)</span></label>
+                    <input type="number" id="obj1_a" placeholder="e.g., 0" value="0" />
+                </div>
+            </div>
+
+            <div class="object-input-section">
+                <h3>Object 2</h3>
+                <div class="form-group">
+                    <label for="obj2_x0">Initial Position, x<sub>0</sub> <span class="unit">(m)</span></label>
+                    <input type="number" id="obj2_x0" placeholder="e.g., 100" value="100" />
+                </div>
+                <div class="form-group">
+                    <label for="obj2_v0">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
+                    <input type="number" id="obj2_v0" placeholder="e.g., -5" />
+                </div>
+                <div class="form-group">
+                    <label for="obj2_a">Acceleration, a <span class="unit">(m/s²)</span></label>
+                    <input type="number" id="obj2_a" placeholder="e.g., 0" value="0" />
+                </div>
+            </div>
+
+            <div class="object-input-section hidden" id="object3Inputs">
+                <h3>Object 3</h3>
+                <div class="form-group">
+                    <label for="obj3_x0">Initial Position, x<sub>0</sub> <span class="unit">(m)</span></label>
+                    <input type="number" id="obj3_x0" placeholder="e.g., 50" />
+                </div>
+                <div class="form-group">
+                    <label for="obj3_v0">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
+                    <input type="number" id="obj3_v0" placeholder="e.g., 2" />
+                </div>
+                <div class="form-group">
+                    <label for="obj3_a">Acceleration, a <span class="unit">(m/s²)</span></label>
+                    <input type="number" id="obj3_a" placeholder="e.g., 1" />
+                </div>
+            </div>
+
+            <button id="addObject3Button" class="add-object-button">Add Object 3</button>
+        </div>
+        <!-- END NEW: Multi-Object 1D Inputs -->
+
         <div id="gravityBox" class="form-group hidden" style="margin-top: var(--spacing-unit); border-top: 1px solid var(--border-color); padding-top: var(--spacing-unit);">
           <label for="acceleration">Gravitational Accel., g <span class="unit">(m/s²)</span></label>
           <input type="number" id="acceleration" placeholder="e.g., 9.81" value="9.81" />
@@ -530,7 +628,7 @@
       </div>
     </div>
     <div class="container hidden" id="trajectoryPanel">
-  <h2>Trajectory Visualization</h2>
+  <h2 id="graphTitle">Trajectory Visualization</h2> <!-- Added ID for dynamic title -->
   <div id="trajectoryPanelInner">
     <!-- Container for canvas, slider, and buttons -->
     <div id="trajectoryContainer">
@@ -569,14 +667,25 @@
 
       // --- Global State Variables ---
       let globalPoints = []; // Trajectory points
-      let globalScale = 1; // Canvas scale factor
+      let globalScale = 1; // Canvas scale factor (for 2D)
+      let globalScaleX = 1; // Canvas scale factor for X-axis (for 1D multi-object)
+      let globalScaleY = 1; // Canvas scale factor for Y-axis (for 1D multi-object)
       let globalOffsetX = 0; // X offset for centering
       let globalOffsetY = 0; // Y offset for centering
-      let global_t_flight = 0; // Total flight time
-      let globalVix = 0; // Initial horizontal velocity (for animation)
-      let globalViy = 0; // Initial vertical velocity (for animation)
+      let global_t_flight = 0; // Total flight time (for 2D)
+      let globalVix = 0; // Initial horizontal velocity (for 2D animation)
+      let globalViy = 0; // Initial vertical velocity (for 2D animation)
       let globalG = G_DEFAULT; // Gravity used in current calculation
-      let globalVerticalShift = 0; // Vertical shift applied to trajectory
+      let globalVerticalShift = 0; // Vertical shift applied to trajectory (for 2D)
+
+      // NEW: Multi-object 1D specific globals
+      let multiObjectData = []; // Stores {x0, v0, a, color, label} for each object (input data)
+      const objectColors = ["#1e90ff", "#ff4500", "#32cd32"]; // Blue, OrangeRed, LimeGreen
+      let showObject3 = false; // State for showing/hiding object 3 inputs
+      let globalMaxTime = 0; // Max time for 1D multi-object graph
+      let globalMinPosition = 0; // Min position for 1D multi-object graph
+      let globalMaxPosition = 0; // Max position for 1D multi-object graph
+      let globalMeetingPoints = []; // Stores {t, x, objects} for meeting points in 1D multi-object
 
       // Animation control
       let animationFrameId = null;
@@ -589,6 +698,9 @@
       const oneDInputsDiv = document.getElementById("oneDInputs");
       const basicInputsDiv = document.getElementById("basicInputs");
       const designInputsDiv = document.getElementById("designInputs");
+      const multiObject1DInputsDiv = document.getElementById("multiObject1DInputs"); // NEW
+      const object3InputsDiv = document.getElementById("object3Inputs"); // NEW
+      const addObject3Button = document.getElementById("addObject3Button"); // NEW
       const gravityBox = document.getElementById("gravityBox");
       const messageDiv = document.getElementById("message");
       const startStopButton = document.getElementById("startStopButton");
@@ -599,15 +711,20 @@
       const trajectoryPanel = document.getElementById("trajectoryPanel");
       const trajectoryCanvas = document.getElementById("trajectoryCanvas");
       const resultContainer = document.getElementById("resultContainer");
+      const graphTitle = document.getElementById("graphTitle"); // NEW: Get graph title element
 
       // --- Event Listeners ---
       document.addEventListener("DOMContentLoaded", () => {
           modeRadios.forEach(radio => radio.addEventListener("change", handleModeChange));
+          // Attach listeners to all number inputs for debounced calculation
           allNumberInputs.forEach(input => input.addEventListener("input", debounce(calculate, 250)));
           if (startStopButton) startStopButton.addEventListener("click", toggleAnimation);
           if (resetButton) resetButton.addEventListener("click", resetAnimation);
-          trajectorySlider.addEventListener("input", handleSliderInput);
-          trajectorySlider.addEventListener("change", handleSliderChange);
+          if (trajectorySlider) { // Ensure slider exists before adding listener
+            trajectorySlider.addEventListener("input", handleSliderInput);
+            trajectorySlider.addEventListener("change", handleSliderChange);
+          }
+          if (addObject3Button) addObject3Button.addEventListener("click", toggleObject3Inputs); // NEW
           updateModeVisibility();
           calculate();
       });
@@ -641,8 +758,29 @@
           oneDInputsDiv.classList.toggle("hidden", mode !== "1d");
           basicInputsDiv.classList.toggle("hidden", mode !== "basic");
           designInputsDiv.classList.toggle("hidden", mode !== "design");
-          gravityBox.classList.toggle("hidden", mode === "1d");
-          trajectoryPanel.classList.toggle("hidden", mode === "1d");
+          multiObject1DInputsDiv.classList.toggle("hidden", mode !== "multiObject1D"); // NEW
+          gravityBox.classList.toggle("hidden", mode === "1d" || mode === "multiObject1D"); // Gravity not needed for 1D modes
+          trajectoryPanel.classList.toggle("hidden", mode === "1d"); // Hide trajectory panel for single 1D mode
+
+          // Manage Object 3 visibility
+          if (mode === "multiObject1D") {
+              object3InputsDiv.classList.toggle("hidden", !showObject3);
+              addObject3Button.textContent = showObject3 ? "Remove Object 3" : "Add Object 3";
+          } else {
+              object3InputsDiv.classList.add("hidden"); // Always hide in other modes
+              addObject3Button.textContent = "Add Object 3"; // Reset button text
+              showObject3 = false; // Reset state
+          }
+
+          // Update graph title based on mode
+          if (graphTitle) {
+              if (mode === "multiObject1D") {
+                  graphTitle.textContent = "Position-Time Graph (1D)";
+              } else {
+                  graphTitle.textContent = "Trajectory Visualization (2D)";
+              }
+          }
+
           clearMessages();
           if (mode === '1d') {
                showNote("1D Mode: Fill in <strong>exactly three</strong> fields.");
@@ -650,8 +788,17 @@
                showNote("2D Mode: Fill in <strong>exactly three</strong> of V<sub>i</sub>, &Delta;x, &Delta;y, &theta;.");
           } else if (mode === 'design') {
                showNote("Design Mode: Fill in target &Delta;x, &Delta;y, and landing angle &phi;.");
+          } else if (mode === 'multiObject1D') { // NEW
+               showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
           }
-          resetAnimation();
+          resetAnimation(); // Reset animation on mode change
+      }
+
+      // NEW: Toggle Object 3 inputs
+      function toggleObject3Inputs() {
+          showObject3 = !showObject3;
+          updateModeVisibility(); // Re-run visibility update to apply changes
+          calculate(); // Recalculate with new object count
       }
 
       // --- Message Display Functions ---
@@ -902,6 +1049,7 @@
                         finalAngleRad = angleRad;
                         finalDx = inputs.dx;
                         finalDy = inputs.dy;
+                        if (finalVi <= 0) throw new Error("Initial velocity must be positive.");
                         const cosTheta = Math.cos(finalAngleRad);
                         const sinTheta = Math.sin(finalAngleRad);
                         if (Math.abs(cosTheta) < TOLERANCE) {
@@ -1140,7 +1288,7 @@
                 resultHTML += formatResultLine("Initial Vertical Vel., V<sub>iy</sub>", Viy, "m/s");
                 resultHTML += `<div class="group-title">Achieved Final State (Verification)</div>`;
                 resultHTML += formatResultLine("Final Horizontal Disp., &Delta;x", dx_check, "m");
-                resultHTML += formatResultLine("Final Vertical Disp., &Delta;y", dy_check, "m");
+                resultHTML += formatResultLine("Final Vertical Disp., V<sub>fy</sub>", dy_check, "m"); // Fixed label
                 resultHTML += formatResultLine("Final Velocity Mag., V<sub>f</sub>", Vf_mag_check, "m/s");
                 resultHTML += formatResultLine("Final Velocity Angle, &phi;", Vf_angle_deg_check, "°");
                 resultHTML += formatResultLine("Final Horizontal Vel., V<sub>fx</sub>", Vfx_check, "m/s");
@@ -1154,6 +1302,325 @@
                 resetAnimation();
             }
         }
+
+        // NEW: Multi-Object 1D Calculation
+        function calculateMultiObject1DMode() {
+            multiObjectData = []; // Clear previous data
+            let minTime = 0;
+            let maxTime = 0;
+            let minPosition = 0;
+            let maxPosition = 0;
+            let meetingPoints = []; // Store {t, x} for meeting points
+
+            const objectsToProcess = [];
+            // Object 1
+            objectsToProcess.push({
+                id: 1,
+                x0: getFloatValue("obj1_x0"),
+                v0: getFloatValue("obj1_v0"),
+                a: getFloatValue("obj1_a"),
+                color: objectColors[0],
+                label: "Object 1"
+            });
+
+            // Object 2
+            objectsToProcess.push({
+                id: 2,
+                x0: getFloatValue("obj2_x0"),
+                v0: getFloatValue("obj2_v0"),
+                a: getFloatValue("obj2_a"),
+                color: objectColors[1],
+                label: "Object 2"
+            });
+
+            // Object 3 (if visible)
+            if (showObject3) {
+                objectsToProcess.push({
+                    id: 3,
+                    x0: getFloatValue("obj3_x0"),
+                    v0: getFloatValue("obj3_v0"),
+                    a: getFloatValue("obj3_a"),
+                    color: objectColors[2],
+                    label: "Object 3"
+                });
+            }
+
+            // Validate inputs for each object
+            for (const obj of objectsToProcess) {
+                if (isNaN(obj.x0) || isNaN(obj.v0) || isNaN(obj.a)) {
+                    showError(`Multi-Object 1D: Please ensure all inputs (Initial Position, Initial Velocity, Acceleration) are valid numbers for ${obj.label}.`);
+                    resetAnimation();
+                    return;
+                }
+                multiObjectData.push(obj); // Store valid input data
+            }
+
+            if (multiObjectData.length < 2) {
+                showNote("Multi-Object 1D Mode: Please enter data for at least two objects.");
+                resetAnimation();
+                return;
+            }
+
+            // Calculate meeting points and determine max time/position for graph
+            let resultHTML = `<div class="result"><div class="group-title">Meeting Points</div>`;
+            let hasMeetingPoints = false;
+
+            // Compare all pairs of objects
+            for (let i = 0; i < multiObjectData.length; i++) {
+                for (let j = i + 1; j < multiObjectData.length; j++) {
+                    const objA = multiObjectData[i];
+                    const objB = multiObjectData[j];
+
+                    // Equation: (0.5*aA - 0.5*aB)t^2 + (v0A - v0B)t + (x0A - x0B) = 0
+                    const A_quad = 0.5 * (objA.a - objB.a);
+                    const B_quad = objA.v0 - objB.v0;
+                    const C_quad = objA.x0 - objB.x0;
+
+                    let times = [];
+
+                    if (Math.abs(A_quad) < TOLERANCE) { // Linear equation: Bt + C = 0
+                        if (Math.abs(B_quad) < TOLERANCE) { // Both A and B are zero
+                            if (Math.abs(C_quad) < TOLERANCE) {
+                                // Identical trajectories
+                                resultHTML += `<p><strong>${objA.label} and ${objB.label}:</strong> <span>Always at the same position.</span></p>`;
+                                hasMeetingPoints = true;
+                                // For graphing, we'll consider a default time range
+                                maxTime = Math.max(maxTime, 10);
+                            } else {
+                                // Parallel lines, never meet
+                                resultHTML += `<p><strong>${objA.label} and ${objB.label}:</strong> <span>Never meet.</span></p>`;
+                            }
+                        } else { // Linear solution: t = -C / B
+                            const t_meet = -C_quad / B_quad;
+                            if (t_meet >= -TOLERANCE) { // Only consider non-negative time
+                                times.push(Math.max(0, t_meet));
+                            }
+                        }
+                    } else { // Quadratic equation
+                        const discriminant = B_quad * B_quad - 4 * A_quad * C_quad;
+                        if (discriminant >= -TOLERANCE) { // Real solutions
+                            const sqrtDisc = Math.sqrt(Math.max(0, discriminant));
+                            const t1 = (-B_quad + sqrtDisc) / (2 * A_quad);
+                            const t2 = (-B_quad - sqrtDisc) / (2 * A_quad);
+
+                            if (t1 >= -TOLERANCE) times.push(Math.max(0, t1));
+                            if (t2 >= -TOLERANCE && Math.abs(t1 - t2) > TOLERANCE) times.push(Math.max(0, t2)); // Avoid duplicate times
+                        }
+                    }
+
+                    times = times.sort((a, b) => a - b); // Sort times in ascending order
+
+                    if (times.length > 0) {
+                        hasMeetingPoints = true;
+                        resultHTML += `<div class="group-title">${objA.label} and ${objB.label} Meeting Points</div>`;
+                        times.forEach(t => {
+                            const x_meet_A = objA.x0 + objA.v0 * t + 0.5 * objA.a * t * t;
+                            meetingPoints.push({ t, x: x_meet_A, objects: [objA.id, objB.id] });
+                            resultHTML += formatResultLine(`Time`, t, "s");
+                            resultHTML += formatResultLine(`Position`, x_meet_A, "m");
+                        });
+                    } else if (Math.abs(A_quad) > TOLERANCE || Math.abs(B_quad) > TOLERANCE || Math.abs(C_quad) > TOLERANCE) {
+                         // Only show "never meet" if they are not identical and no meeting points found
+                        resultHTML += `<p><strong>${objA.label} and ${objB.label}:</strong> <span>Never meet.</span></p>`;
+                    }
+                }
+            }
+
+            if (!hasMeetingPoints && multiObjectData.length >= 2) {
+                resultHTML += `<p>No meeting points found for any pair of objects.</p>`;
+            } else if (multiObjectData.length < 2) {
+                resultHTML += `<p>Enter data for at least two objects to find meeting points.</p>`;
+            }
+            resultHTML += `</div>`;
+            showResult(resultHTML);
+
+            // Determine max time for graph based on meeting points or default
+            if (meetingPoints.length > 0) {
+                maxTime = Math.max(...meetingPoints.map(p => p.t)) * 1.2; // Extend time a bit beyond last meeting
+            } else {
+                // If no meeting points, use a default time or base on initial velocities/accelerations
+                maxTime = 10; // Default to 10 seconds if no meeting points
+                // Could be more sophisticated: e.g., if objects are moving apart, keep time short; if converging, estimate a reasonable time.
+            }
+            maxTime = Math.max(maxTime, 5); // Ensure a minimum time for visualization
+
+            // Generate points for each object's trajectory for graphing
+            globalPoints = []; // Reuse globalPoints for multi-object trajectories
+            let allXValues = [];
+
+            multiObjectData.forEach(obj => {
+                const objPoints = [];
+                const numGraphPoints = 200; // Number of points to draw the curve smoothly
+                for (let i = 0; i <= numGraphPoints; i++) {
+                    const t = (i / numGraphPoints) * maxTime;
+                    const x = obj.x0 + obj.v0 * t + 0.5 * obj.a * t * t;
+                    objPoints.push({ t, x });
+                    allXValues.push(x);
+                }
+                globalPoints.push({
+                    id: obj.id,
+                    label: obj.label,
+                    color: obj.color,
+                    trajectory: objPoints // This is where the trajectory data is attached
+                });
+            });
+
+            // Determine graph scale and offsets for Position-Time graph
+            minPosition = Math.min(0, ...allXValues, ...multiObjectData.map(obj => obj.x0));
+            maxPosition = Math.max(0, ...allXValues, ...multiObjectData.map(obj => obj.x0));
+
+            const canvasWidth = trajectoryCanvas.width;
+            const canvasHeight = trajectoryCanvas.height;
+            const marginFactor = 0.15;
+            const availableWidth = canvasWidth * (1 - marginFactor * 2);
+            const availableHeight = canvasHeight * (1 - marginFactor * 2);
+
+            const rangeX = maxTime - minTime; // Time range
+            const rangeY = maxPosition - minPosition; // Position range
+
+            globalScaleX = (Math.abs(rangeX) < TOLERANCE) ? 1 : availableWidth / rangeX;
+            globalScaleY = (Math.abs(rangeY) < TOLERANCE) ? 1 : availableHeight / rangeY;
+
+            // Adjust globalOffsetX and globalOffsetY for Position-Time graph
+            // X-axis (Time) starts at left margin
+            globalOffsetX = canvasWidth * marginFactor;
+            // Y-axis (Position) should be centered or adjusted based on min/max position
+            // We want y=0 to be visible if possible, or scale to fit all positions.
+            // Let's make the origin (0,0) map to (globalOffsetX, globalOffsetY)
+            // The position axis (Y) will be inverted for canvas drawing (higher Y is lower on canvas)
+            globalOffsetY = canvasHeight * (1 - marginFactor) + minPosition * globalScaleY; // Map minPosition to near bottom
+
+            // Store meeting points globally for drawing
+            globalMeetingPoints = meetingPoints;
+            globalMaxTime = maxTime; // Store max time for animation slider
+            globalMinPosition = minPosition; // Store for state display scaling
+            globalMaxPosition = maxPosition; // Store for state display scaling
+
+            prepareAndDrawMultiObject1DGraph(); // Draw the graph
+            resetAnimation(); // Reset animation to start
+        }
+
+        // NEW: Function to draw the Multi-Object 1D graph
+        function prepareAndDrawMultiObject1DGraph() {
+            const ctx = trajectoryCanvas.getContext("2d");
+            if (!ctx || globalPoints.length === 0) return; // Use globalPoints for drawing
+
+            ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+
+            // Draw axes
+            ctx.strokeStyle = "var(--axis-color)";
+            ctx.lineWidth = 1;
+
+            // X-axis (Time)
+            const xAxisY = globalOffsetY - (0 * globalScaleY); // Position of x=0 on canvas
+            ctx.beginPath();
+            ctx.moveTo(globalOffsetX, xAxisY);
+            ctx.lineTo(trajectoryCanvas.width - (trajectoryCanvas.width * 0.15), xAxisY); // Draw to right margin
+            ctx.stroke();
+            // X-axis label
+            ctx.fillStyle = "var(--label-color)";
+            ctx.font = "12px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.fillText("Time (s)", globalOffsetX + (trajectoryCanvas.width - globalOffsetX - (trajectoryCanvas.width * 0.15)) / 2, xAxisY + 10);
+
+            // Y-axis (Position)
+            const yAxisX = globalOffsetX + (0 * globalScaleX); // Position of t=0 on canvas
+            ctx.beginPath();
+            ctx.moveTo(yAxisX, trajectoryCanvas.height - (trajectoryCanvas.height * 0.15)); // From bottom margin
+            ctx.lineTo(yAxisX, trajectoryCanvas.height * 0.15); // To top margin
+            ctx.stroke();
+            // Y-axis label
+            ctx.save();
+            ctx.translate(yAxisX - 30, trajectoryCanvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+            ctx.fillText("Position (m)", 0, 0);
+            ctx.restore();
+
+
+            // Draw each object's trajectory
+            globalPoints.forEach(obj => { // FIX: Iterate over globalPoints, not multiObjectData
+                ctx.beginPath();
+                obj.trajectory.forEach((pt, i) => {
+                    // Convert (t, x) to canvas (X, Y)
+                    const canvasX = globalOffsetX + pt.t * globalScaleX;
+                    const canvasY = globalOffsetY - pt.x * globalScaleY; // Invert Y for canvas
+
+                    if (i === 0) {
+                        ctx.moveTo(canvasX, canvasY);
+                    } else {
+                        ctx.lineTo(canvasX, canvasY);
+                    }
+                });
+                ctx.strokeStyle = obj.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw label for each object at its starting point
+                const startPt = obj.trajectory[0];
+                const startCanvasX = globalOffsetX + startPt.t * globalScaleX;
+                const startCanvasY = globalOffsetY - startPt.x * globalScaleY;
+                ctx.fillStyle = obj.color;
+                ctx.font = "12px Arial";
+                ctx.textAlign = "left";
+                ctx.textBaseline = "bottom";
+                ctx.fillText(obj.label, startCanvasX + 10, startCanvasY - 5);
+            });
+
+            // Draw meeting points
+            globalMeetingPoints.forEach(mp => {
+                const canvasX = globalOffsetX + mp.t * globalScaleX;
+                const canvasY = globalOffsetY - mp.x * globalScaleY;
+
+                ctx.beginPath();
+                ctx.arc(canvasX, canvasY, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = "red"; // Meeting points are red
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.fillStyle = "var(--marker-text-color)";
+                ctx.font = "11px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                ctx.fillText(`t=${mp.t.toFixed(2)}s, x=${mp.x.toFixed(2)}m`, canvasX, canvasY - 10);
+            });
+        }
+
+        // NEW: Draw current time marker and object positions for Multi-Object 1D
+        function drawMultiObject1DCurrentState(ctx, t_current) {
+            if (globalPoints.length === 0) return; // FIX: Use globalPoints for drawing
+
+            // Draw a vertical line for the current time
+            const lineX = globalOffsetX + t_current * globalScaleX;
+            ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]); // Dashed line
+            ctx.beginPath();
+            ctx.moveTo(lineX, trajectoryCanvas.height * 0.15); // From top margin
+            ctx.lineTo(lineX, trajectoryCanvas.height * (1 - 0.15)); // To bottom margin
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset line dash
+
+            // Draw a circle for each object at its current position
+            globalPoints.forEach(obj => { // FIX: Iterate over globalPoints, not multiObjectData
+                const x_current = obj.trajectory.find(pt => pt.t >= t_current - TOLERANCE)?.x || obj.trajectory[obj.trajectory.length - 1].x;
+                const canvasX = globalOffsetX + t_current * globalScaleX;
+                const canvasY = globalOffsetY - x_current * globalScaleY;
+
+                ctx.beginPath();
+                ctx.arc(canvasX, canvasY, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = obj.color; // Use object's color
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+        }
+
 
         // --- Trajectory Data Generation and Drawing Setup ---
         function prepareAndDrawTrajectory(Vix, Viy, t_flight, g, y_end) {
@@ -1200,9 +1667,10 @@
             const availableHeight = canvasHeight * (1 - marginFactor * 2);
             const rangeX = (maxX - minX);
             const rangeY = (maxY - minY);
-            const scaleX = (Math.abs(rangeX) < TOLERANCE) ? 1 : availableWidth / rangeX;
-            const scaleY = (Math.abs(rangeY) < TOLERANCE) ? 1 : availableHeight / rangeY;
-            globalScale = Math.min(scaleX, scaleY);
+            globalScale = Math.min(
+                (Math.abs(rangeX) < TOLERANCE) ? 1 : availableWidth / rangeX,
+                (Math.abs(rangeY) < TOLERANCE) ? 1 : availableHeight / rangeY
+            );
             globalScale = Math.max(1e-6, globalScale);
             globalScale = Math.min(1e6, globalScale);
             const trajWidthScaled = rangeX * globalScale;
@@ -1316,20 +1784,41 @@
         // --- Animation & Slider Control ---
         function updateAnimationFrame() {
             const ctx = trajectoryCanvas.getContext("2d");
-            if (!ctx || !isFinite(global_t_flight)) return;
+            if (!ctx) return;
+
+            const mode = getSelectedMode();
             const sliderValue = parseFloat(trajectorySlider.value);
-            const t_current = (global_t_flight > TOLERANCE) ? (sliderValue / 100) * global_t_flight : 0;
-            drawStaticTrajectory();
-            drawProjectile(ctx, t_current);
-            updateStateDisplay(t_current);
+            let t_current = 0;
+
+            if (mode === "multiObject1D") {
+                if (globalMaxTime > TOLERANCE) {
+                    t_current = (sliderValue / 100) * globalMaxTime;
+                }
+                prepareAndDrawMultiObject1DGraph(); // Redraw static graph
+                drawMultiObject1DCurrentState(ctx, t_current); // Draw dynamic state
+                updateStateDisplayMultiObject(t_current);
+            } else { // Basic and Design modes (2D)
+                if (!isFinite(global_t_flight)) return;
+                if (global_t_flight > TOLERANCE) {
+                    t_current = (sliderValue / 100) * global_t_flight;
+                }
+                drawStaticTrajectory();
+                drawProjectile(ctx, t_current);
+                updateStateDisplay(t_current);
+            }
         }
 
         function startAutoAnimation() {
             if (autoAnimating) return;
-            if (!isFinite(global_t_flight) || global_t_flight <= 0) return;
+            const mode = getSelectedMode();
+            let totalTime = (mode === "multiObject1D") ? globalMaxTime : global_t_flight;
+
+            if (!isFinite(totalTime) || totalTime <= 0) return;
+
             autoAnimating = true;
             animationStartTime = null;
             startStopButton.textContent = "Stop";
+
             function animateFrame(timestamp) {
                 if (!autoAnimating) return;
                 if (!animationStartTime) {
@@ -1376,12 +1865,25 @@
             pausedProgress = 0;
             trajectorySlider.value = 0;
             startStopButton.textContent = "Start";
-            if (globalPoints && globalPoints.length > 0) {
-                 updateAnimationFrame();
-            } else {
-                 const ctx = trajectoryCanvas.getContext("2d");
-                 if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
-                 updateStateDisplay(0);
+
+            const mode = getSelectedMode();
+            if (mode === "multiObject1D") {
+                if (globalPoints && globalPoints.length > 0) { // Check globalPoints for multi-object
+                    prepareAndDrawMultiObject1DGraph();
+                    updateStateDisplayMultiObject(0);
+                } else {
+                    const ctx = trajectoryCanvas.getContext("2d");
+                    if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+                    updateStateDisplayMultiObject(0);
+                }
+            } else { // 2D modes
+                if (globalPoints && globalPoints.length > 0) {
+                     updateAnimationFrame(); // This will call drawStaticTrajectory and drawProjectile(0)
+                } else {
+                     const ctx = trajectoryCanvas.getContext("2d");
+                     if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+                     updateStateDisplay(0);
+                }
             }
         }
 
@@ -1399,7 +1901,7 @@
             updateAnimationFrame();
         }
 
-        // --- State Display Update ---
+        // --- State Display Update (for 2D) ---
         function updateStateDisplay(t) {
             if (typeof globalVix !== 'number' || typeof globalViy !== 'number' || !isFinite(globalVix) || !isFinite(globalViy) || typeof globalG !== 'number' || !isFinite(globalG)) {
                  stateDisplayValues.innerHTML = `
@@ -1431,6 +1933,29 @@
             `;
         }
 
+        // NEW: State Display Update for Multi-Object 1D
+        function updateStateDisplayMultiObject(t) {
+            let html = `<p><strong>Time:</strong> <span>${t.toFixed(2)} s</span></p>`;
+            if (multiObjectData.length === 0) {
+                html += `
+                    <p><strong>Position:</strong> <span>-- m</span></p>
+                    <p><strong>Velocity:</strong> <span>-- m/s</span></p>
+                `;
+            } else {
+                multiObjectData.forEach(obj => {
+                    const x_current = obj.x0 + obj.v0 * t + 0.5 * obj.a * t * t;
+                    const v_current = obj.v0 + obj.a * t;
+                    html += `
+                        <div class="group-title" style="margin-top: 1rem; color: ${obj.color};">${obj.label}</div>
+                        <p><strong>Position:</strong> <span>${x_current.toFixed(2)} m</span></p>
+                        <p><strong>Velocity:</strong> <span>${v_current.toFixed(2)} m/s</span></p>
+                    `;
+                });
+            }
+            stateDisplayValues.innerHTML = html;
+        }
+
+
         // --- Main Calculation Dispatcher ---
         function calculate() {
             const mode = getSelectedMode();
@@ -1439,6 +1964,10 @@
                      clearMessages();
                      showNote("1D Mode: Fill in <strong>exactly three</strong> fields.");
                     calculate1DMode();
+                } else if (mode === "multiObject1D") { // NEW
+                     clearMessages();
+                     showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
+                     calculateMultiObject1DMode();
                 } else {
                     const accInput = getFloatValue("acceleration");
                     const g = (isFinite(accInput) && accInput > 0) ? accInput : G_DEFAULT;
