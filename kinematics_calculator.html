@@ -664,6 +664,8 @@
       const G_DEFAULT = 9.81; // Default gravitational acceleration
       const TOLERANCE = 1e-9; // For floating-point comparisons
       const ANIMATION_DURATION = 3000; // 3000ms for full animation playback
+      const MEETING_POINT_CLICK_RADIUS = 10; // Pixels radius for clicking a meeting point
+      const GRAPH_MARGIN = 40; // Fixed margin for the multi-object graph axes
 
       // --- Global State Variables ---
       let globalPoints = []; // Trajectory points
@@ -713,6 +715,30 @@
       const resultContainer = document.getElementById("resultContainer");
       const graphTitle = document.getElementById("graphTitle"); // NEW: Get graph title element
 
+      // --- Helper functions for converting data coordinates to canvas coordinates (Multi-Object 1D) ---
+      /**
+       * Converts a time (t) data coordinate to a canvas X-coordinate.
+       * @param {number} t - The time value.
+       * @returns {number} The corresponding canvas X-coordinate.
+       */
+      function dataToCanvasX(t) {
+          // globalOffsetX is the canvas X for data t=0 (left edge of plotting area)
+          return globalOffsetX + t * globalScaleX;
+      }
+
+      /**
+       * Converts a position (x) data coordinate to a canvas Y-coordinate.
+       * @param {number} x - The position value.
+       * @returns {number} The corresponding canvas Y-coordinate.
+       */
+      function dataToCanvasY(x) {
+          // globalOffsetY is the canvas Y for data x=globalMinPosition (bottom of plot area).
+          // To map x to canvas Y, we calculate its position relative to globalMinPosition,
+          // scale it, and subtract from globalOffsetY because canvas Y increases downwards.
+          return globalOffsetY - (x - globalMinPosition) * globalScaleY;
+      }
+
+
       // --- Event Listeners ---
       document.addEventListener("DOMContentLoaded", () => {
           modeRadios.forEach(radio => radio.addEventListener("change", handleModeChange));
@@ -725,6 +751,10 @@
             trajectorySlider.addEventListener("change", handleSliderChange);
           }
           if (addObject3Button) addObject3Button.addEventListener("click", toggleObject3Inputs); // NEW
+          
+          // NEW: Add click listener to canvas for meeting points
+          if (trajectoryCanvas) trajectoryCanvas.addEventListener("click", handleCanvasClick);
+
           updateModeVisibility();
           calculate();
       });
@@ -1288,7 +1318,7 @@
                 resultHTML += formatResultLine("Initial Vertical Vel., V<sub>iy</sub>", Viy, "m/s");
                 resultHTML += `<div class="group-title">Achieved Final State (Verification)</div>`;
                 resultHTML += formatResultLine("Final Horizontal Disp., &Delta;x", dx_check, "m");
-                resultHTML += formatResultLine("Final Vertical Disp., V<sub>fy</sub>", dy_check, "m"); // Fixed label
+                resultHTML += formatResultLine("Final Vertical Disp., V<sub>fy</sub>", dy_check, "m");
                 resultHTML += formatResultLine("Final Velocity Mag., V<sub>f</sub>", Vf_mag_check, "m/s");
                 resultHTML += formatResultLine("Final Velocity Angle, &phi;", Vf_angle_deg_check, "°");
                 resultHTML += formatResultLine("Final Horizontal Vel., V<sub>fx</sub>", Vfx_check, "m/s");
@@ -1308,8 +1338,8 @@
             multiObjectData = []; // Clear previous data
             let minTime = 0;
             let maxTime = 0;
-            let minPosition = 0;
-            let maxPosition = 0;
+            let minPosition = 0; // Initialize minPosition to 0 to ensure 0 is considered for scaling
+            let maxPosition = 0; // Initialize maxPosition to 0 to ensure 0 is considered for scaling
             let meetingPoints = []; // Store {t, x} for meeting points
 
             const objectsToProcess = [];
@@ -1466,29 +1496,26 @@
             });
 
             // Determine graph scale and offsets for Position-Time graph
+            // Ensure 0 is always included in the position range for correct axis placement
             minPosition = Math.min(0, ...allXValues, ...multiObjectData.map(obj => obj.x0));
             maxPosition = Math.max(0, ...allXValues, ...multiObjectData.map(obj => obj.x0));
 
             const canvasWidth = trajectoryCanvas.width;
             const canvasHeight = trajectoryCanvas.height;
-            const marginFactor = 0.15;
-            const availableWidth = canvasWidth * (1 - marginFactor * 2);
-            const availableHeight = canvasHeight * (1 - marginFactor * 2);
+            const availableWidth = canvasWidth - 2 * GRAPH_MARGIN;
+            const availableHeight = canvasHeight - 2 * GRAPH_MARGIN;
 
-            const rangeX = maxTime - minTime; // Time range
+            const rangeX = maxTime; // Time range (starts from 0)
             const rangeY = maxPosition - minPosition; // Position range
 
             globalScaleX = (Math.abs(rangeX) < TOLERANCE) ? 1 : availableWidth / rangeX;
             globalScaleY = (Math.abs(rangeY) < TOLERANCE) ? 1 : availableHeight / rangeY;
 
-            // Adjust globalOffsetX and globalOffsetY for Position-Time graph
-            // X-axis (Time) starts at left margin
-            globalOffsetX = canvasWidth * marginFactor;
-            // Y-axis (Position) should be centered or adjusted based on min/max position
-            // We want y=0 to be visible if possible, or scale to fit all positions.
-            // Let's make the origin (0,0) map to (globalOffsetX, globalOffsetY)
-            // The position axis (Y) will be inverted for canvas drawing (higher Y is lower on canvas)
-            globalOffsetY = canvasHeight * (1 - marginFactor) + minPosition * globalScaleY; // Map minPosition to near bottom
+            // globalOffsetX is the canvas X for data t=0 (left edge of plotting area)
+            globalOffsetX = GRAPH_MARGIN;
+            // globalOffsetY is the canvas Y for data x=globalMinPosition (bottom of plot area).
+            // This means that the canvas Y coordinate for the data point `globalMinPosition` is `canvasHeight - GRAPH_MARGIN`.
+            globalOffsetY = canvasHeight - GRAPH_MARGIN;
 
             // Store meeting points globally for drawing
             globalMeetingPoints = meetingPoints;
@@ -1500,53 +1527,65 @@
             resetAnimation(); // Reset animation to start
         }
 
-        // NEW: Function to draw the Multi-Object 1D graph
-        function prepareAndDrawMultiObject1DGraph() {
-            const ctx = trajectoryCanvas.getContext("2d");
-            if (!ctx || globalPoints.length === 0) return; // Use globalPoints for drawing
-
-            ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
-
-            // Draw axes
-            ctx.strokeStyle = "var(--axis-color)";
+        /**
+         * Draws the X and Y axes for the multi-object 1D graph.
+         * @param {CanvasRenderingContext2D} ctx - The 2D rendering context of the canvas.
+         * @param {number} width - The width of the canvas.
+         * @param {number} height - The height of the canvas.
+         * @param {number} margin - The margin from the canvas edges.
+         */
+        function drawAxesForMultiObject(ctx, width, height, margin) {
+            ctx.strokeStyle = '#aaa'; // A neutral gray color for axes
             ctx.lineWidth = 1;
 
-            // X-axis (Time)
-            const xAxisY = globalOffsetY - (0 * globalScaleY); // Position of x=0 on canvas
+            // X-axis (Position = 0 line)
+            // Calculate the canvas Y coordinate for position 0
+            const xAxisY_canvas = dataToCanvasY(0);
             ctx.beginPath();
-            ctx.moveTo(globalOffsetX, xAxisY);
-            ctx.lineTo(trajectoryCanvas.width - (trajectoryCanvas.width * 0.15), xAxisY); // Draw to right margin
+            ctx.moveTo(margin, xAxisY_canvas);
+            ctx.lineTo(width - margin, xAxisY_canvas);
             ctx.stroke();
+
+            // Y-axis (Time = 0 line)
+            const yAxisX_canvas = dataToCanvasX(0); // This should be 'margin'
+            ctx.beginPath();
+            ctx.moveTo(yAxisX_canvas, margin);
+            ctx.lineTo(yAxisX_canvas, height - margin);
+            ctx.stroke();
+
             // X-axis label
             ctx.fillStyle = "var(--label-color)";
             ctx.font = "12px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "top";
-            ctx.fillText("Time (s)", globalOffsetX + (trajectoryCanvas.width - globalOffsetX - (trajectoryCanvas.width * 0.15)) / 2, xAxisY + 10);
+            ctx.fillText("Time (s)", margin + (width - 2 * margin) / 2, xAxisY_canvas + 10);
 
-            // Y-axis (Position)
-            const yAxisX = globalOffsetX + (0 * globalScaleX); // Position of t=0 on canvas
-            ctx.beginPath();
-            ctx.moveTo(yAxisX, trajectoryCanvas.height - (trajectoryCanvas.height * 0.15)); // From bottom margin
-            ctx.lineTo(yAxisX, trajectoryCanvas.height * 0.15); // To top margin
-            ctx.stroke();
             // Y-axis label
             ctx.save();
-            ctx.translate(yAxisX - 30, trajectoryCanvas.height / 2);
+            ctx.translate(yAxisX_canvas - 30, margin + (height - 2 * margin) / 2); // Adjust X position for rotated text
             ctx.rotate(-Math.PI / 2);
             ctx.textAlign = "center";
             ctx.textBaseline = "bottom";
             ctx.fillText("Position (m)", 0, 0);
             ctx.restore();
+        }
 
+        // NEW: Function to draw the Multi-Object 1D graph
+        function prepareAndDrawMultiObject1DGraph() {
+            const ctx = trajectoryCanvas.getContext("2d");
+            if (!ctx || globalPoints.length === 0) return;
+
+            ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+
+            // Draw the axes using the dedicated function
+            drawAxesForMultiObject(ctx, trajectoryCanvas.width, trajectoryCanvas.height, GRAPH_MARGIN);
 
             // Draw each object's trajectory
-            globalPoints.forEach(obj => { // FIX: Iterate over globalPoints, not multiObjectData
+            globalPoints.forEach(obj => {
                 ctx.beginPath();
                 obj.trajectory.forEach((pt, i) => {
-                    // Convert (t, x) to canvas (X, Y)
-                    const canvasX = globalOffsetX + pt.t * globalScaleX;
-                    const canvasY = globalOffsetY - pt.x * globalScaleY; // Invert Y for canvas
+                    const canvasX = dataToCanvasX(pt.t);
+                    const canvasY = dataToCanvasY(pt.x);
 
                     if (i === 0) {
                         ctx.moveTo(canvasX, canvasY);
@@ -1560,8 +1599,8 @@
 
                 // Draw label for each object at its starting point
                 const startPt = obj.trajectory[0];
-                const startCanvasX = globalOffsetX + startPt.t * globalScaleX;
-                const startCanvasY = globalOffsetY - startPt.x * globalScaleY;
+                const startCanvasX = dataToCanvasX(startPt.t);
+                const startCanvasY = dataToCanvasY(startPt.x);
                 ctx.fillStyle = obj.color;
                 ctx.font = "12px Arial";
                 ctx.textAlign = "left";
@@ -1571,8 +1610,8 @@
 
             // Draw meeting points
             globalMeetingPoints.forEach(mp => {
-                const canvasX = globalOffsetX + mp.t * globalScaleX;
-                const canvasY = globalOffsetY - mp.x * globalScaleY;
+                const canvasX = dataToCanvasX(mp.t);
+                const canvasY = dataToCanvasY(mp.x);
 
                 ctx.beginPath();
                 ctx.arc(canvasX, canvasY, 6, 0, 2 * Math.PI);
@@ -1592,24 +1631,24 @@
 
         // NEW: Draw current time marker and object positions for Multi-Object 1D
         function drawMultiObject1DCurrentState(ctx, t_current) {
-            if (globalPoints.length === 0) return; // FIX: Use globalPoints for drawing
+            if (globalPoints.length === 0) return;
 
             // Draw a vertical line for the current time
-            const lineX = globalOffsetX + t_current * globalScaleX;
+            const lineX = dataToCanvasX(t_current);
             ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
             ctx.lineWidth = 1;
             ctx.setLineDash([5, 5]); // Dashed line
             ctx.beginPath();
-            ctx.moveTo(lineX, trajectoryCanvas.height * 0.15); // From top margin
-            ctx.lineTo(lineX, trajectoryCanvas.height * (1 - 0.15)); // To bottom margin
+            ctx.moveTo(lineX, GRAPH_MARGIN); // From top margin
+            ctx.lineTo(lineX, trajectoryCanvas.height - GRAPH_MARGIN); // To bottom margin
             ctx.stroke();
             ctx.setLineDash([]); // Reset line dash
 
             // Draw a circle for each object at its current position
-            globalPoints.forEach(obj => { // FIX: Iterate over globalPoints, not multiObjectData
+            globalPoints.forEach(obj => {
                 const x_current = obj.trajectory.find(pt => pt.t >= t_current - TOLERANCE)?.x || obj.trajectory[obj.trajectory.length - 1].x;
-                const canvasX = globalOffsetX + t_current * globalScaleX;
-                const canvasY = globalOffsetY - x_current * globalScaleY;
+                const canvasX = dataToCanvasX(t_current);
+                const canvasY = dataToCanvasY(x_current);
 
                 ctx.beginPath();
                 ctx.arc(canvasX, canvasY, 6, 0, 2 * Math.PI);
@@ -1899,6 +1938,39 @@
         function handleSliderChange() {
             pausedProgress = parseFloat(trajectorySlider.value) / 100;
             updateAnimationFrame();
+        }
+
+        // NEW: Handle clicks on the canvas for meeting points
+        function handleCanvasClick(event) {
+            const mode = getSelectedMode();
+            if (mode !== "multiObject1D" || globalMeetingPoints.length === 0) {
+                return;
+            }
+
+            const rect = trajectoryCanvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            for (const mp of globalMeetingPoints) {
+                const canvasX = dataToCanvasX(mp.t);
+                const canvasY = dataToCanvasY(mp.x);
+
+                const distance = Math.sqrt(
+                    Math.pow(clickX - canvasX, 2) + Math.pow(clickY - canvasY, 2)
+                );
+
+                if (distance <= MEETING_POINT_CLICK_RADIUS) {
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                    autoAnimating = false;
+                    startStopButton.textContent = "Start";
+
+                    const newSliderValue = (mp.t / globalMaxTime) * 100;
+                    trajectorySlider.value = newSliderValue;
+                    pausedProgress = newSliderValue / 100;
+                    updateAnimationFrame();
+                    break;
+                }
+            }
         }
 
         // --- State Display Update (for 2D) ---
