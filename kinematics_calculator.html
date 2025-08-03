@@ -567,7 +567,7 @@
                 <h3>Object 1</h3>
                 <div class="form-group">
                     <label for="obj1_x0">Initial Position, x<sub>0</sub> <span class="unit">(m)</span></label>
-                    <input type="number" id="obj1_x0" placeholder="e.g., 0" value="0" />
+                    <input type="number" id="obj1_x0" placeholder="e.g., 0" />
                 </div>
                 <div class="form-group">
                     <label for="obj1_v0">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
@@ -575,7 +575,7 @@
                 </div>
                 <div class="form-group">
                     <label for="obj1_a">Acceleration, a <span class="unit">(m/s²)</span></label>
-                    <input type="number" id="obj1_a" placeholder="e.g., 0" value="0" />
+                    <input type="number" id="obj1_a" placeholder="e.g., 0" />
                 </div>
             </div>
 
@@ -583,7 +583,7 @@
                 <h3>Object 2</h3>
                 <div class="form-group">
                     <label for="obj2_x0">Initial Position, x<sub>0</sub> <span class="unit">(m)</span></label>
-                    <input type="number" id="obj2_x0" placeholder="e.g., 100" value="100" />
+                    <input type="number" id="obj2_x0" placeholder="e.g., 100" />
                 </div>
                 <div class="form-group">
                     <label for="obj2_v0">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
@@ -591,7 +591,7 @@
                 </div>
                 <div class="form-group">
                     <label for="obj2_a">Acceleration, a <span class="unit">(m/s²)</span></label>
-                    <input type="number" id="obj2_a" placeholder="e.g., 0" value="0" />
+                    <input type="number" id="obj2_a" placeholder="e.g., 0" />
                 </div>
             </div>
 
@@ -664,8 +664,8 @@
       const G_DEFAULT = 9.81; // Default gravitational acceleration
       const TOLERANCE = 1e-9; // For floating-point comparisons
       const ANIMATION_DURATION = 3000; // 3000ms for full animation playback
-      const MEETING_POINT_CLICK_RADIUS = 10; // Pixels radius for clicking a meeting point
-      const GRAPH_MARGIN = 40; // Fixed margin for the multi-object graph axes
+      const MEETING_POINT_CLICK_RADIUS = 50; // Pixels radius for clicking a meeting point
+      const GRAPH_MARGIN = 50; // Fixed margin for the multi-object graph axes
 
       // --- Global State Variables ---
       let globalPoints = []; // Trajectory points
@@ -884,7 +884,7 @@
           return `<p><strong>${label}:</strong> <span>${displayValue}</span> <span class="unit">${unit}</span></p>`;
       }
 
-      // --- 1D Kinematics Calculation (unchanged) ---
+      // --- 1D Kinematics Calculation (MODIFIED) ---
       function calculate1DMode() {
           const vi = getFloatValue("v1d", true);
           const vf = getFloatValue("vf1d", true);
@@ -915,14 +915,20 @@
                   sol.a = (sol.vf - sol.vi) / sol.t;
                   sol.d = sol.vi * sol.t + 0.5 * sol.a * sol.t * sol.t;
               } else if (has.vi && has.vf && has.a) {
-                  sol.t = (sol.vf - sol.vi) / sol.a;
-                  sol.d = sol.vi * sol.t + 0.5 * sol.a * sol.t * sol.t;
+                  if (Math.abs(sol.a) < TOLERANCE) {
+                      if (Math.abs(sol.vf - sol.vi) > TOLERANCE) throw new Error("If acceleration is zero, Vi and Vf must be equal.");
+                      sol.t = NaN; // Or Infinity, time is indeterminate if d is not known
+                      sol.d = NaN;
+                  } else {
+                      sol.t = (sol.vf - sol.vi) / sol.a;
+                      sol.d = sol.vi * sol.t + 0.5 * sol.a * sol.t * sol.t;
+                  }
               } else if (has.vi && has.vf && has.d) {
                   const v_avg = (sol.vi + sol.vf) / 2;
                   if (Math.abs(v_avg) < TOLERANCE) {
                        if (Math.abs(sol.d) > TOLERANCE) throw new Error("Displacement must be zero if average velocity is zero.");
-                       sol.t = 0;
-                       sol.a = NaN;
+                       sol.t = NaN; // Time is indeterminate
+                       sol.a = NaN; // Acceleration is indeterminate
                   } else {
                       sol.t = sol.d / v_avg;
                   }
@@ -930,7 +936,7 @@
                   sol.t = Math.max(0, sol.t);
                   if (Math.abs(sol.t) < TOLERANCE) {
                        if(Math.abs(sol.vf - sol.vi) > TOLERANCE) throw new Error("Vf and Vi must be equal if time is zero.");
-                       sol.a = NaN;
+                       sol.a = NaN; // Acceleration is indeterminate
                   } else {
                        sol.a = (sol.vf - sol.vi) / sol.t;
                   }
@@ -938,30 +944,57 @@
                   sol.vf = sol.vi + sol.a * sol.t;
                   sol.d = sol.vi * sol.t + 0.5 * sol.a * sol.t * sol.t;
               } else if (has.vi && has.a && has.d) {
-                   const A = 0.5 * sol.a;
-                   const B = sol.vi;
-                   const C = -sol.d;
-                   if (Math.abs(A) < TOLERANCE) {
-                       if (Math.abs(B) < TOLERANCE) {
-                           if (Math.abs(C) > TOLERANCE) throw new Error("Displacement must be zero if Vi and a are zero.");
-                           sol.t = 0;
-                       } else {
-                           sol.t = -C / B;
-                       }
-                   } else {
-                       const disc = B * B - 4 * A * C;
-                       if (disc < -TOLERANCE) throw new Error("No real solution for time.");
-                       const sqrtDisc = Math.sqrt(Math.max(0, disc));
-                       const t1 = (-B + sqrtDisc) / (2 * A);
-                       const t2 = (-B - sqrtDisc) / (2 * A);
-                       if (t1 >= -TOLERANCE && (t1 < t2 || t2 < -TOLERANCE)) sol.t = t1;
-                       else if (t2 >= -TOLERANCE) sol.t = t2;
-                       else throw new Error("No positive real solution for time.");
-                   }
-                   sol.t = Math.max(0, sol.t);
-                   sol.vf = sol.vi + sol.a * sol.t;
+                  const A = 0.5 * sol.a;
+                  const B = sol.vi;
+                  const C = -sol.d;
+
+                  if (Math.abs(A) < TOLERANCE) { // Linear case: a=0
+                      if (Math.abs(B) < TOLERANCE) { // vi=0
+                          if (Math.abs(C) > TOLERANCE) throw new Error("Displacement must be zero if Vi and a are zero.");
+                          sol.t = 0; // d=0, vi=0, a=0 -> t=0
+                      } else { // vi != 0
+                          sol.t = -C / B; // d = vi*t
+                      }
+                      if (sol.t < -TOLERANCE) throw new Error("Calculation resulted in negative time.");
+                      sol.t = Math.max(0, sol.t);
+                      sol.vf = sol.vi + sol.a * sol.t; // Since a=0, vf=vi
+                  } else { // Quadratic case: a!=0
+                      const disc = B * B - 4 * A * C;
+                      if (disc < -TOLERANCE) throw new Error("No real solution for time.");
+                      
+                      const sqrtDisc = Math.sqrt(Math.max(0, disc));
+                      const t1 = (-B + sqrtDisc) / (2 * A);
+                      const t2 = (-B - sqrtDisc) / (2 * A);
+
+                      const validTimes = [t1, t2]
+                          .filter(t => t >= -TOLERANCE)
+                          .map(t => Math.max(0, t));
+                          
+                      const uniqueTimes = [...new Set(validTimes.map(t => t.toPrecision(10)))].map(s => parseFloat(s));
+
+                      if (uniqueTimes.length === 0) throw new Error("No positive real solution for time.");
+
+                      let resultHTML = '';
+                      uniqueTimes.sort((a, b) => a - b).forEach((t_sol, index) => {
+                          const vf_sol = sol.vi + sol.a * t_sol;
+                          resultHTML += `<div class="group-title">Solution ${index + 1}</div>`;
+                          resultHTML += formatResultLine("Initial Velocity, V<sub>i</sub>", sol.vi, "m/s");
+                          resultHTML += formatResultLine("Final Velocity, V<sub>f</sub>", vf_sol, "m/s");
+                          resultHTML += formatResultLine("Acceleration, a", sol.a, "m/s²");
+                          resultHTML += formatResultLine("Displacement, d", sol.d, "m");
+                          resultHTML += formatResultLine("Time, t", t_sol, "s");
+                      });
+                      
+                      showResult(resultHTML);
+                      return; // Exit function to prevent the default single summary.
+                  }
               } else if (has.vi && has.t && has.d) {
-                  sol.a = 2 * (sol.d - sol.vi * sol.t) / (sol.t * sol.t);
+                  if (Math.abs(sol.t) < TOLERANCE) {
+                      if (Math.abs(sol.d) > TOLERANCE) throw new Error("Displacement must be zero if time is zero.");
+                      sol.a = NaN; // Indeterminate
+                  } else {
+                      sol.a = 2 * (sol.d - sol.vi * sol.t) / (sol.t * sol.t);
+                  }
                   sol.vf = sol.vi + sol.a * sol.t;
               } else if (has.vf && has.a && has.t) {
                   sol.vi = sol.vf - sol.a * sol.t;
@@ -970,29 +1003,76 @@
                   const A = 0.5 * sol.a;
                   const B = -sol.vf;
                   const C = sol.d;
-                  const disc = B * B - 4 * A * C;
-                  if (disc < -TOLERANCE) throw new Error("No real solution for time.");
-                  const t1 = (-B + Math.sqrt(disc)) / (2 * A);
-                  const t2 = (-B - Math.sqrt(disc)) / (2 * A);
-                  sol.t = (t1 >= -TOLERANCE ? t1 : t2);
-                  sol.vi = sol.vf - sol.a * sol.t;
+
+                  if (Math.abs(A) < TOLERANCE) { // Linear case: a=0
+                      if (Math.abs(B) < TOLERANCE) { // vf=0
+                          if (Math.abs(C) > TOLERANCE) throw new Error("Displacement must be zero if Vf and a are zero.");
+                          sol.t = NaN; // If d=0, vf=0, a=0, time is indeterminate.
+                          sol.vi = 0;
+                      } else { // vf != 0
+                          sol.t = C / B; // d = vf*t (since a=0, vi=vf)
+                      }
+                      if (sol.t < -TOLERANCE) throw new Error("Calculation resulted in negative time.");
+                      sol.t = Math.max(0, sol.t);
+                      sol.vi = sol.vf - sol.a * sol.t;
+                  } else { // Quadratic case: a!=0
+                      const disc = B * B - 4 * A * C;
+                      if (disc < -TOLERANCE) throw new Error("No real solution for time.");
+
+                      const sqrtDisc = Math.sqrt(Math.max(0, disc));
+                      const t1 = (-B + sqrtDisc) / (2 * A);
+                      const t2 = (-B - sqrtDisc) / (2 * A);
+                      
+                      const validTimes = [t1, t2]
+                          .filter(t => t >= -TOLERANCE)
+                          .map(t => Math.max(0, t));
+
+                      const uniqueTimes = [...new Set(validTimes.map(t => t.toPrecision(10)))].map(s => parseFloat(s));
+
+                      if (uniqueTimes.length === 0) throw new Error("No positive real solution for time.");
+
+                      let resultHTML = '';
+                      uniqueTimes.sort((a, b) => a - b).forEach((t_sol, index) => {
+                          const vi_sol = sol.vf - sol.a * t_sol;
+                          resultHTML += `<div class="group-title">Solution ${index + 1}</div>`;
+                          resultHTML += formatResultLine("Initial Velocity, V<sub>i</sub>", vi_sol, "m/s");
+                          resultHTML += formatResultLine("Final Velocity, V<sub>f</sub>", sol.vf, "m/s");
+                          resultHTML += formatResultLine("Acceleration, a", sol.a, "m/s²");
+                          resultHTML += formatResultLine("Displacement, d", sol.d, "m");
+                          resultHTML += formatResultLine("Time, t", t_sol, "s");
+                      });
+                      
+                      showResult(resultHTML);
+                      return; // Exit function
+                  }
               } else if (has.vf && has.t && has.d) {
-                  sol.vi = (2 * sol.d) / sol.t - sol.vf;
-                  sol.a = (sol.vf - sol.vi) / sol.t;
+                  if (Math.abs(sol.t) < TOLERANCE) {
+                      if (Math.abs(sol.d) > TOLERANCE) throw new Error("Displacement must be zero if time is zero.");
+                      sol.a = NaN; // Indeterminate
+                      sol.vi = sol.vf;
+                  } else {
+                      sol.vi = (2 * sol.d) / sol.t - sol.vf;
+                      sol.a = (sol.vf - sol.vi) / sol.t;
+                  }
               } else if (has.a && has.t && has.d) {
-                  sol.vi = (sol.d - 0.5 * sol.a * sol.t * sol.t) / sol.t;
-                  sol.vf = sol.vi + sol.a * sol.t;
+                  if (Math.abs(sol.t) < TOLERANCE) {
+                      if (Math.abs(sol.d) > TOLERANCE) throw new Error("Displacement must be zero if time is zero.");
+                      sol.vi = NaN; // Indeterminate
+                      sol.vf = NaN; // Indeterminate
+                  } else {
+                      sol.vi = (sol.d - 0.5 * sol.a * sol.t * sol.t) / sol.t;
+                      sol.vf = sol.vi + sol.a * sol.t;
+                  }
               } else {
                   throw new Error("Unexpected combination of inputs.");
               }
 
-              let resultHTML = `<div class="result"><div class="group-title">1D Kinematics Results</div>`;
+              let resultHTML = `<div class="group-title">1D Kinematics Results</div>`;
               resultHTML += formatResultLine("Initial Velocity, V<sub>i</sub>", sol.vi, "m/s");
               resultHTML += formatResultLine("Final Velocity, V<sub>f</sub>", sol.vf, "m/s");
               resultHTML += formatResultLine("Acceleration, a", sol.a, "m/s²");
               resultHTML += formatResultLine("Displacement, d", sol.d, "m");
               resultHTML += formatResultLine("Time, t", sol.t, "s");
-              resultHTML += `</div>`;
               showResult(resultHTML);
 
           } catch (e) {
