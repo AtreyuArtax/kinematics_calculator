@@ -2,6 +2,8 @@
 
 A comprehensive web-based calculator for one-dimensional (1D) and two-dimensional (2D) kinematics, including projectile motion analysis. This interactive tool helps users solve physics problems by calculating unknown variables and visualizing projectile trajectories.
 
+🔗 https://github.com/AtreyuArtax/kinematics_calculator
+
 ## Features
 
 * **Multiple Calculation Modes:**
@@ -17,7 +19,7 @@ A comprehensive web-based calculator for one-dimensional (1D) and two-dimensiona
 
 ## How to Use
 
-1.  **Open `kinematics_calculator.html` in your web browser.**
+1.  **Open https://github.com/AtreyuArtax/kinematics_calculator**
 2.  **Select a Mode:**
     * **1D:** For one-dimensional motion. Fill in *exactly three* of the five fields ($V_i$, $V_f$, $a$, $d$, $t$).
     * **2D:** For basic two-dimensional projectile motion. Fill in *exactly three* of $V_i$, $\Delta x$, $\Delta y$, and $\theta$. Time ($t$) is optional for additional state calculation.
