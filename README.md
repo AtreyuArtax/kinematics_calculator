@@ -2,7 +2,7 @@
 
 A comprehensive web-based calculator for one-dimensional (1D) and two-dimensional (2D) kinematics, including projectile motion analysis. This interactive tool helps users solve physics problems by calculating unknown variables and visualizing projectile trajectories.
 
-🔗 https://github.com/AtreyuArtax/kinematics_calculator
+🔗 https://atreyuartax.github.io/kinematics_calculator
 
 ## Features
 
