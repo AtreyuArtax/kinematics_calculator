@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline - Kinematics Calculator</title>
+  <meta name="theme-color" content="#0056b3" />
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0; padding: 2rem; display: grid; place-items: center; min-height: 100vh;
+      background: #f8f9fa; color: #212529;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0d1117; color: #c9d1d9; }
+    }
+    .card {
+      max-width: 680px; width: 100%; border: 1px solid #dee2e6; border-radius: 12px;
+      padding: 1.5rem; background: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      .card { background: #161b22; border-color: #30363d; }
+    }
+    h1 { margin-top: 0; color: #0056b3; font-size: 1.5rem; }
+    p { line-height: 1.6; }
+    .actions { margin-top: 1rem; display: flex; gap: .5rem; flex-wrap: wrap; }
+    a.button { text-decoration: none; border: 1px solid #ced4da; padding: .5rem 1rem; border-radius: 8px; color: inherit; }
+  </style>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icon-192.svg" />
+  <meta name="robots" content="noindex" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>navigator.serviceWorker && navigator.serviceWorker.register('./sw.js');</script>
+  <noscript>Enable JavaScript for full functionality.</noscript>
+  <base href="./" />
+</head>
+<body>
+  <div class="card">
+    <h1>You're offline</h1>
+    <p>
+      The Kinematics Calculator couldn't load the requested page without a network connection.
+      Some features require connectivity, but the app will work once you're back online.
+    </p>
+    <div class="actions">
+      <a class="button" href="./">Try Home</a>
+      <a class="button" href="index.html">Reload Index</a>
+    </div>
+  </div>
+</body>
+<!-- Offline fallback page used by service worker navigation fallback. -->
+</html>

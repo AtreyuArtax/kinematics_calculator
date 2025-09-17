@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kinematics & Projectile Motion Calculator</title>
+    <meta name="theme-color" content="#0056b3" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon-192.svg" />
   <style>
     /* --- Light Mode Variables (Default) --- */
     :root {
@@ -659,7 +662,15 @@
   </div>
 </div>
 
-    <script>
+        <script>
+            // PWA: Service worker registration
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js').catch(console.error);
+                });
+            }
+        </script>
+        <script>
       // --- Constants ---
       const G_DEFAULT = 9.81; // Default gravitational acceleration
       const TOLERANCE = 1e-9; // For floating-point comparisons
