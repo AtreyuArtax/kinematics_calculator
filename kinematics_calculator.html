@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kinematics & Projectile Motion Calculator</title>
+  <link rel="icon" href="./icons/icon-192.png" />
+  <link rel="icon" href="./icons/icon-512.png" sizes="512x512" />
+  <link rel="icon" href="./icons/icon-192.svg" sizes="192x192" />
+  <link rel="icon" href="./icons/icon-512.svg" sizes="512x512" />
   <style>
     /* --- Light Mode Variables (Default) --- */
     :root {
@@ -985,6 +989,7 @@
                           resultHTML += formatResultLine("Time, t", t_sol, "s");
                       });
                       
+
                       showResult(resultHTML);
                       return; // Exit function to prevent the default single summary.
                   }
@@ -1042,6 +1047,7 @@
                           resultHTML += formatResultLine("Time, t", t_sol, "s");
                       });
                       
+
                       showResult(resultHTML);
                       return; // Exit function
                   }
@@ -1467,6 +1473,7 @@
 
             if (multiObjectData.length < 2) {
                 showNote("Multi-Object 1D Mode: Please enter data for at least two objects.");
+
                 resetAnimation();
                 return;
             }

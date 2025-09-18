@@ -6,7 +6,10 @@
   <title>Kinematics & Projectile Motion Calculator</title>
     <meta name="theme-color" content="#0056b3" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" href="./icons/icon-192.svg" />
+    <link rel="icon" href="./icons/icon-192.png" />
+    <link rel="icon" href="./icons/icon-512.png" sizes="512x512" />
+    <link rel="icon" href="./icons/icon-192.svg" sizes="192x192" />
+    <link rel="icon" href="./icons/icon-512.svg" sizes="512x512" />
   <style>
     /* --- Light Mode Variables (Default) --- */
     :root {
@@ -1467,6 +1470,7 @@
             }
 
             // Validate inputs for each object
+           
             for (const obj of objectsToProcess) {
                 if (isNaN(obj.x0) || isNaN(obj.v0) || isNaN(obj.a)) {
                     showError(`Multi-Object 1D: Please ensure all inputs (Initial Position, Initial Velocity, Acceleration) are valid numbers for ${obj.label}.`);
