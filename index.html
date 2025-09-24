@@ -162,17 +162,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .form-group {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      margin-bottom: 1rem;
-      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+      gap: 0.4rem;
     }
 
     .form-group label {
@@ -185,12 +185,12 @@
     .form-group input[type="number"] {
       flex: 1;
       min-width: 120px;
-      padding: 0.6rem 0.75rem;
+      padding: 0.5rem 0.65rem;
       border-radius: var(--border-radius);
       border: 1px solid var(--border-color);
       background-color: var(--input-bg);
       color: var(--input-text);
-      font-size: 1rem;
+      font-size: 0.95rem;
       transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
     }
 
@@ -246,8 +246,8 @@
     }
 
     .note, .error, .result {
-      margin-top: 1.5rem;
-      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
       border-radius: var(--border-radius);
       border-width: 1px;
       border-style: solid;
@@ -270,7 +270,7 @@
       background-color: var(--note-bg);
       color: var(--note-text);
       border-color: var(--note-border);
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
 
     .result .group-title {
@@ -450,22 +450,22 @@
     .object-input-section {
         border: 1px solid var(--border-color);
         border-radius: var(--border-radius);
-        padding: 1rem;
-        margin-top: 1.5rem;
+        padding: 0.75rem;
+        margin-top: 1rem;
         background-color: var(--input-bg);
     }
 
     .object-input-section h3 {
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         color: var(--primary-color);
-        margin-bottom: 1rem;
+        margin-bottom: 0.6rem;
         border-bottom: 1px solid var(--border-color);
-        padding-bottom: 0.5rem;
+        padding-bottom: 0.4rem;
     }
 
     .add-object-button {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
         border: 1px solid var(--primary-color);
         border-radius: var(--border-radius);
         background-color: var(--primary-color);
@@ -473,7 +473,7 @@
         cursor: pointer;
         transition: background-color 0.2s ease, border-color 0.2s ease;
         font-weight: 500;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
         display: block; /* Make it a block element to center or control layout */
         margin-left: auto;
         margin-right: auto;
@@ -482,6 +482,49 @@
     .add-object-button:hover {
         background-color: #004494;
         border-color: #004494;
+    }
+
+    .clear-button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        border: 1px solid #dc3545;
+        border-radius: var(--border-radius);
+        background-color: #ffffff;
+        color: #dc3545;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        font-weight: 500;
+        margin-top: 0.5rem;
+        margin-bottom: 0.25rem;
+        display: inline-block;
+    }
+
+    .clear-button:hover {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .clear-button:active {
+        background-color: #c82333;
+        border-color: #c82333;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .clear-button {
+            background-color: #21262d;
+            border-color: #f85149;
+            color: #f85149;
+        }
+        
+        .clear-button:hover {
+            background-color: #f85149;
+            color: #0d1117;
+        }
+
+        .clear-button:active {
+            background-color: #ec6547;
+            border-color: #ec6547;
+        }
     }
 
   </style>
@@ -525,6 +568,7 @@
             <label for="t1d">Time, t <span class="unit">(s)</span></label>
             <input type="number" id="t1d" placeholder="e.g., 4" />
           </div>
+          <button class="clear-button" id="clear1D">Clear All</button>
         </div>
         <div id="basicInputs" class="hidden">
           <p class="note">Fill in <strong>exactly three</strong> of these fields: Initial Velocity (V<sub>i</sub>), &Delta;x, &Delta;y, and Launch Angle (&theta;). Time (t) is optional.</p>
@@ -548,6 +592,7 @@
             <label for="time">Time (optional), t <span class="unit">(s)</span></label>
             <input type="number" id="time" placeholder="e.g., 2.5" />
           </div>
+          <button class="clear-button" id="clearBasic">Clear All</button>
         </div>
         <div id="designInputs" class="hidden">
           <p class="note">Enter target displacements (&Delta;x and &Delta;y) and the desired landing angle (&phi;). The calculator computes the required launch angle and initial speed.</p>
@@ -563,6 +608,7 @@
             <label for="landingAngle">Landing Angle, &phi; <span class="unit">(°)</span></label>
             <input type="number" id="landingAngle" placeholder="e.g., -30" />
           </div>
+          <button class="clear-button" id="clearDesign">Clear All</button>
         </div>
 
         <!-- NEW: Multi-Object 1D Inputs -->
@@ -618,10 +664,11 @@
             </div>
 
             <button id="addObject3Button" class="add-object-button">Add Object 3</button>
+            <button class="clear-button" id="clearMultiObject">Clear All</button>
         </div>
         <!-- END NEW: Multi-Object 1D Inputs -->
 
-        <div id="gravityBox" class="form-group hidden" style="margin-top: var(--spacing-unit); border-top: 1px solid var(--border-color); padding-top: var(--spacing-unit);">
+        <div id="gravityBox" class="form-group hidden" style="margin-top: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
           <label for="acceleration">Gravitational Accel., g <span class="unit">(m/s²)</span></label>
           <input type="number" id="acceleration" placeholder="e.g., 9.81" value="9.81" />
         </div>
@@ -766,6 +813,17 @@
           }
           if (addObject3Button) addObject3Button.addEventListener("click", toggleObject3Inputs); // NEW
           
+          // Clear button event listeners
+          const clear1DButton = document.getElementById("clear1D");
+          const clearBasicButton = document.getElementById("clearBasic");
+          const clearDesignButton = document.getElementById("clearDesign");
+          const clearMultiObjectButton = document.getElementById("clearMultiObject");
+          
+          if (clear1DButton) clear1DButton.addEventListener("click", clear1DInputs);
+          if (clearBasicButton) clearBasicButton.addEventListener("click", clearBasicInputs);
+          if (clearDesignButton) clearDesignButton.addEventListener("click", clearDesignInputs);
+          if (clearMultiObjectButton) clearMultiObjectButton.addEventListener("click", clearMultiObjectInputs);
+          
           // NEW: Add click listener to canvas for meeting points
           if (trajectoryCanvas) trajectoryCanvas.addEventListener("click", handleCanvasClick);
 
@@ -896,6 +954,59 @@
               displayValue = value;
           }
           return `<p><strong>${label}:</strong> <span>${displayValue}</span> <span class="unit">${unit}</span></p>`;
+      }
+
+      // --- Clear Input Functions ---
+      function clear1DInputs() {
+          document.getElementById("v1d").value = "";
+          document.getElementById("vf1d").value = "";
+          document.getElementById("a1d").value = "";
+          document.getElementById("d1d").value = "";
+          document.getElementById("t1d").value = "";
+          clearMessages();
+          showNote("1D Mode: Fill in <strong>exactly three</strong> fields.");
+      }
+
+      function clearBasicInputs() {
+          document.getElementById("vi").value = "";
+          document.getElementById("dx").value = "";
+          document.getElementById("dy").value = "";
+          document.getElementById("angle").value = "";
+          document.getElementById("time").value = "";
+          clearMessages();
+          resetAnimation();
+          showNote("2D Mode: Fill in <strong>exactly three</strong> of V<sub>i</sub>, &Delta;x, &Delta;y, &theta;.");
+      }
+
+      function clearDesignInputs() {
+          document.getElementById("dxDesign").value = "";
+          document.getElementById("dyDesign").value = "";
+          document.getElementById("landingAngle").value = "";
+          clearMessages();
+          resetAnimation();
+          showNote("Design Mode: Fill in target &Delta;x, &Delta;y, and landing angle &phi;.");
+      }
+
+      function clearMultiObjectInputs() {
+          document.getElementById("obj1_x0").value = "";
+          document.getElementById("obj1_v0").value = "";
+          document.getElementById("obj1_a").value = "";
+          document.getElementById("obj2_x0").value = "";
+          document.getElementById("obj2_v0").value = "";
+          document.getElementById("obj2_a").value = "";
+          document.getElementById("obj3_x0").value = "";
+          document.getElementById("obj3_v0").value = "";
+          document.getElementById("obj3_a").value = "";
+          
+          // Reset Object 3 visibility if it's shown
+          if (showObject3) {
+              showObject3 = false;
+              updateModeVisibility();
+          }
+          
+          clearMessages();
+          resetAnimation();
+          showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
       }
 
       // --- 1D Kinematics Calculation (MODIFIED) ---

@@ -3,52 +3,2271 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Offline - Kinematics Calculator</title>
-  <meta name="theme-color" content="#0056b3" />
+  <title>Kinematics & Projectile Motion Calculator</title>
+    <meta name="theme-color" content="#0056b3" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon-192.png" />
+    <link rel="icon" href="./icons/icon-512.png" sizes="512x512" />
+    <link rel="icon" href="./icons/icon-192.svg" sizes="192x192" />
+    <link rel="icon" href="./icons/icon-512.svg" sizes="512x512" />
   <style>
-    :root { color-scheme: light dark; }
+    /* --- Light Mode Variables (Default) --- */
+    :root {
+      --primary-color: #0056b3;
+      --secondary-color: #f8f9fa; /* Body background */
+      --container-bg: #ffffff; /* Container background */
+      --text-color: #212529; /* Main text */
+      --label-color: #495057; /* Labels */
+      --border-color: #dee2e6; /* Borders */
+      --input-bg: #ffffff; /* Input background */
+      --input-text: #495057; /* Input text */
+      --input-focus-border: #86b7fe; /* Input focus border */
+      --input-focus-shadow: rgba(0, 123, 255, 0.25); /* Input focus shadow */
+      --success-bg: #d1e7dd;
+      --success-text: #0f5132;
+      --success-border: #badbcc;
+      --error-bg: #f8d7da;
+      --error-text: #842029;
+      --error-border: #f5c2c7;
+      --note-bg: #fff3cd;
+      --note-text: #664d03;
+      --note-border: #ffecb5;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --button-bg: #ffffff;
+      --button-hover-bg: #e9ecef;
+      --button-border: #ced4da;
+      --radio-checked-bg: #e7f1ff;
+      --radio-checked-border: var(--primary-color);
+      --canvas-bg: #ffffff;
+      /* We now hardcode the trajectory colour to blue in the drawing functions */
+      --trajectory-color: #aaccee;
+      --marker-text-color: #000000;
+      --state-display-bg: #ffffff;
+      --state-display-border: var(--border-color);
+      --state-display-text: var(--text-color);
+      --axis-color: rgba(128, 128, 128, 0.5);
+      --border-radius: 8px;
+      --spacing-unit: 1rem;
+    }
+
+    /* --- Dark Mode Variables --- */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary-color: #58a6ff;
+        --secondary-color: #0d1117;
+        --container-bg: #161b22;
+        --text-color: #c9d1d9;
+        --label-color: #8b949e;
+        --border-color: #30363d;
+        --input-bg: #0d1117;
+        --input-text: #c9d1d9;
+        --input-focus-border: #58a6ff;
+        --input-focus-shadow: rgba(88, 166, 255, 0.25);
+        --success-bg: #0f2d1f;
+        --success-text: #56d364;
+        --success-border: #1a472a;
+        --error-bg: #35191c;
+        --error-text: #f87171;
+        --error-border: #58292d;
+        --note-bg: #3a2c0f;
+        --note-text: #eac54f;
+        --note-border: #6e551a;
+        --shadow-color: rgba(0, 0, 0, 0.4);
+        --button-bg: #21262d;
+        --button-hover-bg: #30363d;
+        --button-border: #30363d;
+        --radio-checked-bg: #1f6feb;
+        --radio-checked-border: var(--primary-color);
+        --canvas-bg: #1a1f27;
+        --trajectory-color: #58a6ff;
+        --marker-text-color: #c9d1d9;
+        --state-display-bg: #161b22;
+        --state-display-border: var(--border-color);
+        --state-display-text: var(--text-color);
+        --axis-color: rgba(160, 160, 160, 0.4);
+      }
+    }
+
+    /* --- Base & Layout Styles --- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+      color-scheme: light dark;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 0; padding: 2rem; display: grid; place-items: center; min-height: 100vh;
-      background: #f8f9fa; color: #212529;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: var(--spacing-unit);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
+
+    .wrapper {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .top-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    @media (min-width: 900px) {
+      .top-container {
+        flex-direction: row;
+      }
+    }
+
+    .container {
+      background-color: var(--container-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 12px var(--shadow-color);
+      padding: 2rem;
+      flex: 1;
+      border: 1px solid var(--border-color);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-bottom: 0;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+      font-size: 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 0.6rem;
+      gap: 0.4rem;
+    }
+
+    .form-group label {
+      flex: 0 0 250px;
+      font-weight: 500;
+      color: var(--label-color);
+      padding-right: 0.5rem;
+    }
+
+    .form-group input[type="number"] {
+      flex: 1;
+      min-width: 120px;
+      padding: 0.5rem 0.65rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+      background-color: var(--input-bg);
+      color: var(--input-text);
+      font-size: 0.95rem;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .form-group input[type="number"]:focus {
+      outline: none;
+      border-color: var(--input-focus-border);
+      box-shadow: 0 0 0 3px var(--input-focus-shadow);
+    }
+
+    .unit {
+      font-size: 0.85rem;
+      color: var(--label-color);
+      margin-left: 0.25rem;
+      opacity: 0.8;
+    }
+
+    .modeToggle {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .modeToggle input[type="radio"] {
+      display: none;
+    }
+
+    .modeToggle label {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--button-border);
+      border-radius: var(--border-radius);
+      background-color: var(--button-bg);
+      color: var(--text-color);
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      font-weight: 500;
+    }
+
+    .modeToggle label:hover {
+      background-color: var(--button-hover-bg);
+    }
+
+    .modeToggle input[type="radio"]:checked + label {
+      background-color: var(--radio-checked-bg);
+      border-color: var(--radio-checked-border);
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
     @media (prefers-color-scheme: dark) {
-      body { background: #0d1117; color: #c9d1d9; }
+      .modeToggle input[type="radio"]:checked + label {
+        color: #ffffff;
+      }
     }
-    .card {
-      max-width: 680px; width: 100%; border: 1px solid #dee2e6; border-radius: 12px;
-      padding: 1.5rem; background: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+
+    .note, .error, .result {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius);
+      border-width: 1px;
+      border-style: solid;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     }
+
+    .error {
+      background-color: var(--error-bg);
+      color: var(--error-text);
+      border-color: var(--error-border);
+    }
+
+    .result {
+      background-color: var(--success-bg);
+      color: var(--success-text);
+      border-color: var(--success-border);
+    }
+
+    .note {
+      background-color: var(--note-bg);
+      color: var(--note-text);
+      border-color: var(--note-border);
+      margin-bottom: 0.75rem;
+    }
+
+    .result .group-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.35rem;
+      color: var(--primary-color);
+    }
+
+    .result .group-title:first-of-type {
+      margin-top: 0;
+    }
+
+    .result p {
+      margin-bottom: 0.6rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .result p strong {
+      font-weight: 500;
+      display: inline-block;
+      min-width: 210px;
+      color: var(--label-color);
+    }
+
+    .result p span:not(.unit) {
+      color: var(--text-color);
+      font-weight: 400;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* --- Trajectory Panel --- */
+    #trajectoryPanel {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+/* --- New Trajectory Panel Inner Layout --- */
+#trajectoryPanelInner {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+/* On small screens, stack the two containers vertically */
+@media (max-width: 600px) {
+  #trajectoryPanelInner {
+    flex-direction: column;
+  }
+}
+
+/* Container for the trajectory canvas, slider, and buttons */
+#trajectoryContainer {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Container for the current state display */
+#stateDisplayContainer {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+
+
+    /* New container for the main trajectory display */
+    #trajectoryMain {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    
+    /* Ensure that on small screens the canvas and state display stack vertically */
+    @media (max-width: 600px) {
+      #trajectoryMain {
+        flex-direction: column;
+      }
+    }
+
+    #trajectoryCanvas {
+     
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background-color: var(--canvas-bg);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+      display: block;
+      width: 100%;
+	  max-width: 800px;
+      height: auto;
+      aspect-ratio: 800 / 300;
+    }
+
+    #stateDisplay {
+      flex: 1 1 200px;
+      min-width: 180px;
+      border: 1px solid var(--state-display-border);
+      border-radius: var(--border-radius);
+      background-color: var(--state-display-bg);
+      color: var(--state-display-text);
+      padding: 1rem;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    #stateDisplay h3 {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+      color: var(--primary-color);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.3rem;
+    }
+
+    #stateDisplay p {
+      margin-bottom: 0.4rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #stateDisplay p strong {
+      color: var(--label-color);
+      font-weight: 500;
+    }
+
+    /* --- Trajectory Controls (New Container) --- */
+    #trajectoryControls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    #trajectoryControls .buttonContainer {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    #trajectorySlider {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    #startStopButton, #resetButton {
+      padding: 0.6rem 1.2rem;
+      font-size: 0.95rem;
+      border: 1px solid var(--button-border);
+      border-radius: var(--border-radius);
+      background-color: var(--button-bg);
+      color: var(--text-color);
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      font-weight: 500;
+    }
+
+    #startStopButton:hover, #resetButton:hover {
+      background-color: var(--button-hover-bg);
+      border-color: var(--primary-color);
+    }
+
+    #startStopButton:active, #resetButton:active {
+      transform: scale(0.98);
+    }
+
+    /* Style for object input sections */
+    .object-input-section {
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 0.75rem;
+        margin-top: 1rem;
+        background-color: var(--input-bg);
+    }
+
+    .object-input-section h3 {
+        font-size: 1.05rem;
+        color: var(--primary-color);
+        margin-bottom: 0.6rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.4rem;
+    }
+
+    .add-object-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        border: 1px solid var(--primary-color);
+        border-radius: var(--border-radius);
+        background-color: var(--primary-color);
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+        font-weight: 500;
+        margin-top: 1rem;
+        display: block; /* Make it a block element to center or control layout */
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .add-object-button:hover {
+        background-color: #004494;
+        border-color: #004494;
+    }
+
+    .clear-button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        border: 1px solid #dc3545;
+        border-radius: var(--border-radius);
+        background-color: #ffffff;
+        color: #dc3545;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        font-weight: 500;
+        margin-top: 0.5rem;
+        margin-bottom: 0.25rem;
+        display: inline-block;
+    }
+
+    .clear-button:hover {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .clear-button:active {
+        background-color: #c82333;
+        border-color: #c82333;
+    }
+
     @media (prefers-color-scheme: dark) {
-      .card { background: #161b22; border-color: #30363d; }
+        .clear-button {
+            background-color: #21262d;
+            border-color: #f85149;
+            color: #f85149;
+        }
+        
+        .clear-button:hover {
+            background-color: #f85149;
+            color: #0d1117;
+        }
+
+        .clear-button:active {
+            background-color: #ec6547;
+            border-color: #ec6547;
+        }
     }
-    h1 { margin-top: 0; color: #0056b3; font-size: 1.5rem; }
-    p { line-height: 1.6; }
-    .actions { margin-top: 1rem; display: flex; gap: .5rem; flex-wrap: wrap; }
-    a.button { text-decoration: none; border: 1px solid #ced4da; padding: .5rem 1rem; border-radius: 8px; color: inherit; }
+
   </style>
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="icon" href="./icons/icon-192.svg" />
-  <meta name="robots" content="noindex" />
-  <meta http-equiv="Cache-Control" content="no-store" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <script>navigator.serviceWorker && navigator.serviceWorker.register('./sw.js');</script>
-  <noscript>Enable JavaScript for full functionality.</noscript>
-  <base href="./" />
 </head>
 <body>
-  <div class="card">
-    <h1>You're offline</h1>
-    <p>
-      The Kinematics Calculator couldn't load the requested page without a network connection.
-      Some features require connectivity, but the app will work once you're back online.
-    </p>
-    <div class="actions">
-      <a class="button" href="./">Try Home</a>
-      <a class="button" href="index.html">Reload Index</a>
+  <div class="wrapper">
+    <div class="top-container">
+      <div class="container" id="inputContainer">
+        <div class="header">
+          <h1>Kinematics Calculator</h1>
+          <div class="modeToggle">
+            <input type="radio" name="mode" id="mode1D" value="1d" checked />
+            <label for="mode1D">1D</label>
+            <input type="radio" name="mode" id="mode2D" value="basic" />
+            <label for="mode2D">2D</label>
+            <input type="radio" name="mode" id="modeDesign" value="design" />
+            <label for="modeDesign">Design</label>
+            <input type="radio" name="mode" id="modeMultiObject1D" value="multiObject1D" />
+            <label for="modeMultiObject1D">Multi-Object 1D</label>
+          </div>
+        </div>
+        <div id="oneDInputs">
+          <p class="note">Fill in <strong>exactly three</strong> of the following five fields. The two missing variables will be calculated.</p>
+          <div class="form-group">
+            <label for="v1d">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
+            <input type="number" id="v1d" placeholder="e.g., 5" />
+          </div>
+          <div class="form-group">
+            <label for="vf1d">Final Velocity, V<sub>f</sub> <span class="unit">(m/s)</span></label>
+            <input type="number" id="vf1d" placeholder="e.g., 10" />
+          </div>
+          <div class="form-group">
+            <label for="a1d">Acceleration, a <span class="unit">(m/s²)</span></label>
+            <input type="number" id="a1d" placeholder="e.g., 2" />
+          </div>
+          <div class="form-group">
+            <label for="d1d">Displacement, d <span class="unit">(m)</span></label>
+            <input type="number" id="d1d" placeholder="e.g., 20" />
+          </div>
+          <div class="form-group">
+            <label for="t1d">Time, t <span class="unit">(s)</span></label>
+            <input type="number" id="t1d" placeholder="e.g., 4" />
+          </div>
+          <button class="clear-button" id="clear1D">Clear All</button>
+        </div>
+        <div id="basicInputs" class="hidden">
+          <p class="note">Fill in <strong>exactly three</strong> of these fields: Initial Velocity (V<sub>i</sub>), &Delta;x, &Delta;y, and Launch Angle (&theta;). Time (t) is optional.</p>
+          <div class="form-group">
+            <label for="vi">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
+            <input type="number" id="vi" placeholder="e.g., 20" />
+          </div>
+          <div class="form-group">
+            <label for="dx">Horizontal Displacement, &Delta;x <span class="unit">(m)</span></label>
+            <input type="number" id="dx" placeholder="e.g., 30" />
+          </div>
+          <div class="form-group">
+            <label for="dy">Vertical Displacement, &Delta;y <span class="unit">(m)</span></label>
+            <input type="number" id="dy" placeholder="e.g., 5" />
+          </div>
+          <div class="form-group">
+            <label for="angle">Launch Angle, &theta; <span class="unit">(°)</span></label>
+            <input type="number" id="angle" placeholder="e.g., 45" />
+          </div>
+          <div class="form-group">
+            <label for="time">Time (optional), t <span class="unit">(s)</span></label>
+            <input type="number" id="time" placeholder="e.g., 2.5" />
+          </div>
+          <button class="clear-button" id="clearBasic">Clear All</button>
+        </div>
+        <div id="designInputs" class="hidden">
+          <p class="note">Enter target displacements (&Delta;x and &Delta;y) and the desired landing angle (&phi;). The calculator computes the required launch angle and initial speed.</p>
+          <div class="form-group">
+            <label for="dxDesign">Target &Delta;x <span class="unit">(m)</span></label>
+            <input type="number" id="dxDesign" placeholder="e.g., 3" />
+          </div>
+          <div class="form-group">
+            <label for="dyDesign">Target &Delta;y <span class="unit">(m)</span></label>
+            <input type="number" id="dyDesign" placeholder="e.g., 1.2" />
+          </div>
+          <div class="form-group">
+            <label for="landingAngle">Landing Angle, &phi; <span class="unit">(°)</span></label>
+            <input type="number" id="landingAngle" placeholder="e.g., -30" />
+          </div>
+          <button class="clear-button" id="clearDesign">Clear All</button>
+        </div>
+
+        <!-- NEW: Multi-Object 1D Inputs -->
+        <div id="multiObject1DInputs" class="hidden">
+            <p class="note">Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.</p>
+
+            <div class="object-input-section">
+                <h3>Object 1</h3>
+                <div class="form-group">
+                    <label for="obj1_x0">Initial Position, x<sub>0</sub> <span class="unit">(m)</span></label>
+                    <input type="number" id="obj1_x0" placeholder="e.g., 0" />
+                </div>
+                <div class="form-group">
+                    <label for="obj1_v0">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
+                    <input type="number" id="obj1_v0" placeholder="e.g., 10" />
+                </div>
+                <div class="form-group">
+                    <label for="obj1_a">Acceleration, a <span class="unit">(m/s²)</span></label>
+                    <input type="number" id="obj1_a" placeholder="e.g., 0" />
+                </div>
+            </div>
+
+            <div class="object-input-section">
+                <h3>Object 2</h3>
+                <div class="form-group">
+                    <label for="obj2_x0">Initial Position, x<sub>0</sub> <span class="unit">(m)</span></label>
+                    <input type="number" id="obj2_x0" placeholder="e.g., 100" />
+                </div>
+                <div class="form-group">
+                    <label for="obj2_v0">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
+                    <input type="number" id="obj2_v0" placeholder="e.g., -5" />
+                </div>
+                <div class="form-group">
+                    <label for="obj2_a">Acceleration, a <span class="unit">(m/s²)</span></label>
+                    <input type="number" id="obj2_a" placeholder="e.g., 0" />
+                </div>
+            </div>
+
+            <div class="object-input-section hidden" id="object3Inputs">
+                <h3>Object 3</h3>
+                <div class="form-group">
+                    <label for="obj3_x0">Initial Position, x<sub>0</sub> <span class="unit">(m)</span></label>
+                    <input type="number" id="obj3_x0" placeholder="e.g., 50" />
+                </div>
+                <div class="form-group">
+                    <label for="obj3_v0">Initial Velocity, V<sub>i</sub> <span class="unit">(m/s)</span></label>
+                    <input type="number" id="obj3_v0" placeholder="e.g., 2" />
+                </div>
+                <div class="form-group">
+                    <label for="obj3_a">Acceleration, a <span class="unit">(m/s²)</span></label>
+                    <input type="number" id="obj3_a" placeholder="e.g., 1" />
+                </div>
+            </div>
+
+            <button id="addObject3Button" class="add-object-button">Add Object 3</button>
+            <button class="clear-button" id="clearMultiObject">Clear All</button>
+        </div>
+        <!-- END NEW: Multi-Object 1D Inputs -->
+
+        <div id="gravityBox" class="form-group hidden" style="margin-top: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+          <label for="acceleration">Gravitational Accel., g <span class="unit">(m/s²)</span></label>
+          <input type="number" id="acceleration" placeholder="e.g., 9.81" value="9.81" />
+        </div>
+      </div>
+      <div class="container" id="resultContainer">
+        <h2>Results</h2>
+        <div id="message">
+          <p class="note">Enter parameters in the relevant section on the left to see results.</p>
+        </div>
+      </div>
+    </div>
+    <div class="container hidden" id="trajectoryPanel">
+  <h2 id="graphTitle">Trajectory Visualization</h2> <!-- Added ID for dynamic title -->
+  <div id="trajectoryPanelInner">
+    <!-- Container for canvas, slider, and buttons -->
+    <div id="trajectoryContainer">
+      <canvas id="trajectoryCanvas" width="800" height="300"></canvas>
+      <div id="trajectoryControls">
+        <input type="range" id="trajectorySlider" min="0" max="100" value="0" step="0.1" />
+        <div class="buttonContainer">
+          <button id="startStopButton">Start</button>
+          <button id="resetButton">Reset</button>
+        </div>
+      </div>
+    </div>
+    <!-- Separate container for the current state display -->
+    <div id="stateDisplayContainer">
+      <div id="stateDisplay">
+        <h3>Current State</h3>
+        <div id="stateValues">
+          <p><strong>Time:</strong> <span>-- s</span></p>
+          <p><strong>dx:</strong> <span>-- m</span></p>
+          <p><strong>dy:</strong> <span>-- m</span></p>
+          <p><strong>vx:</strong> <span>-- m/s</span></p>
+          <p><strong>vy:</strong> <span>-- m/s</span></p>
+          <p><strong>Speed:</strong> <span>-- m/s</span></p>
+          <p><strong>Angle:</strong> <span>-- °</span></p>
+        </div>
+      </div>
     </div>
   </div>
+</div>
+
+        <script>
+            // PWA: Service worker registration
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js').catch(console.error);
+                });
+            }
+        </script>
+        <script>
+      // --- Constants ---
+      const G_DEFAULT = 9.81; // Default gravitational acceleration
+      const TOLERANCE = 1e-9; // For floating-point comparisons
+      const ANIMATION_DURATION = 3000; // 3000ms for full animation playback
+      const MEETING_POINT_CLICK_RADIUS = 50; // Pixels radius for clicking a meeting point
+      const GRAPH_MARGIN = 50; // Fixed margin for the multi-object graph axes
+
+      // --- Global State Variables ---
+      let globalPoints = []; // Trajectory points
+      let globalScale = 1; // Canvas scale factor (for 2D)
+      let globalScaleX = 1; // Canvas scale factor for X-axis (for 1D multi-object)
+      let globalScaleY = 1; // Canvas scale factor for Y-axis (for 1D multi-object)
+      let globalOffsetX = 0; // X offset for centering
+      let globalOffsetY = 0; // Y offset for centering
+      let global_t_flight = 0; // Total flight time (for 2D)
+      let globalVix = 0; // Initial horizontal velocity (for 2D animation)
+      let globalViy = 0; // Initial vertical velocity (for 2D animation)
+      let globalG = G_DEFAULT; // Gravity used in current calculation
+      let globalVerticalShift = 0; // Vertical shift applied to trajectory (for 2D)
+
+      // NEW: Multi-object 1D specific globals
+      let multiObjectData = []; // Stores {x0, v0, a, color, label} for each object (input data)
+      const objectColors = ["#1e90ff", "#ff4500", "#32cd32"]; // Blue, OrangeRed, LimeGreen
+      let showObject3 = false; // State for showing/hiding object 3 inputs
+      let globalMaxTime = 0; // Max time for 1D multi-object graph
+      let globalMinPosition = 0; // Min position for 1D multi-object graph
+      let globalMaxPosition = 0; // Max position for 1D multi-object graph
+      let globalMeetingPoints = []; // Stores {t, x, objects} for meeting points in 1D multi-object
+
+      // Animation control
+      let animationFrameId = null;
+      let autoAnimating = false;
+      let animationStartTime = null;
+      let pausedProgress = 0;
+
+      // --- DOM Elements ---
+      const modeRadios = document.getElementsByName("mode");
+      const oneDInputsDiv = document.getElementById("oneDInputs");
+      const basicInputsDiv = document.getElementById("basicInputs");
+      const designInputsDiv = document.getElementById("designInputs");
+      const multiObject1DInputsDiv = document.getElementById("multiObject1DInputs"); // NEW
+      const object3InputsDiv = document.getElementById("object3Inputs"); // NEW
+      const addObject3Button = document.getElementById("addObject3Button"); // NEW
+      const gravityBox = document.getElementById("gravityBox");
+      const messageDiv = document.getElementById("message");
+      const startStopButton = document.getElementById("startStopButton");
+      const resetButton = document.getElementById("resetButton");
+      const trajectorySlider = document.getElementById("trajectorySlider");
+      const allNumberInputs = document.querySelectorAll("input[type='number']");
+      const stateDisplayValues = document.getElementById("stateValues");
+      const trajectoryPanel = document.getElementById("trajectoryPanel");
+      const trajectoryCanvas = document.getElementById("trajectoryCanvas");
+      const resultContainer = document.getElementById("resultContainer");
+      const graphTitle = document.getElementById("graphTitle"); // NEW: Get graph title element
+
+      // --- Helper functions for converting data coordinates to canvas coordinates (Multi-Object 1D) ---
+      /**
+       * Converts a time (t) data coordinate to a canvas X-coordinate.
+       * @param {number} t - The time value.
+       * @returns {number} The corresponding canvas X-coordinate.
+       */
+      function dataToCanvasX(t) {
+          // globalOffsetX is the canvas X for data t=0 (left edge of plotting area)
+          return globalOffsetX + t * globalScaleX;
+      }
+
+      /**
+       * Converts a position (x) data coordinate to a canvas Y-coordinate.
+       * @param {number} x - The position value.
+       * @returns {number} The corresponding canvas Y-coordinate.
+       */
+      function dataToCanvasY(x) {
+          // globalOffsetY is the canvas Y for data x=globalMinPosition (bottom of plot area).
+          // To map x to canvas Y, we calculate its position relative to globalMinPosition,
+          // scale it, and subtract from globalOffsetY because canvas Y increases downwards.
+          return globalOffsetY - (x - globalMinPosition) * globalScaleY;
+      }
+
+
+      // --- Event Listeners ---
+      document.addEventListener("DOMContentLoaded", () => {
+          modeRadios.forEach(radio => radio.addEventListener("change", handleModeChange));
+          // Attach listeners to all number inputs for debounced calculation
+          allNumberInputs.forEach(input => input.addEventListener("input", debounce(calculate, 250)));
+          if (startStopButton) startStopButton.addEventListener("click", toggleAnimation);
+          if (resetButton) resetButton.addEventListener("click", resetAnimation);
+          if (trajectorySlider) { // Ensure slider exists before adding listener
+            trajectorySlider.addEventListener("input", handleSliderInput);
+            trajectorySlider.addEventListener("change", handleSliderChange);
+          }
+          if (addObject3Button) addObject3Button.addEventListener("click", toggleObject3Inputs); // NEW
+          
+          // Clear button event listeners
+          const clear1DButton = document.getElementById("clear1D");
+          const clearBasicButton = document.getElementById("clearBasic");
+          const clearDesignButton = document.getElementById("clearDesign");
+          const clearMultiObjectButton = document.getElementById("clearMultiObject");
+          
+          if (clear1DButton) clear1DButton.addEventListener("click", clear1DInputs);
+          if (clearBasicButton) clearBasicButton.addEventListener("click", clearBasicInputs);
+          if (clearDesignButton) clearDesignButton.addEventListener("click", clearDesignInputs);
+          if (clearMultiObjectButton) clearMultiObjectButton.addEventListener("click", clearMultiObjectInputs);
+          
+          // NEW: Add click listener to canvas for meeting points
+          if (trajectoryCanvas) trajectoryCanvas.addEventListener("click", handleCanvasClick);
+
+          updateModeVisibility();
+          calculate();
+      });
+
+      // --- Debounce Function ---
+      function debounce(func, wait) {
+          let timeout;
+          return function executedFunction(...args) {
+              const later = () => {
+                  clearTimeout(timeout);
+                  func.apply(this, args);
+              };
+              clearTimeout(timeout);
+              timeout = setTimeout(later, wait);
+          };
+      }
+
+      // --- Mode Switching Logic ---
+      function handleModeChange() {
+          updateModeVisibility();
+          calculate();
+      }
+
+      function getSelectedMode() {
+          const checkedRadio = document.querySelector("input[name='mode']:checked");
+          return checkedRadio ? checkedRadio.value : "1d";
+      }
+
+      function updateModeVisibility() {
+          const mode = getSelectedMode();
+          oneDInputsDiv.classList.toggle("hidden", mode !== "1d");
+          basicInputsDiv.classList.toggle("hidden", mode !== "basic");
+          designInputsDiv.classList.toggle("hidden", mode !== "design");
+          multiObject1DInputsDiv.classList.toggle("hidden", mode !== "multiObject1D"); // NEW
+          gravityBox.classList.toggle("hidden", mode === "1d" || mode === "multiObject1D"); // Gravity not needed for 1D modes
+          trajectoryPanel.classList.toggle("hidden", mode === "1d"); // Hide trajectory panel for single 1D mode
+
+          // Manage Object 3 visibility
+          if (mode === "multiObject1D") {
+              object3InputsDiv.classList.toggle("hidden", !showObject3);
+              addObject3Button.textContent = showObject3 ? "Remove Object 3" : "Add Object 3";
+          } else {
+              object3InputsDiv.classList.add("hidden"); // Always hide in other modes
+              addObject3Button.textContent = "Add Object 3"; // Reset button text
+              showObject3 = false; // Reset state
+          }
+
+          // Update graph title based on mode
+          if (graphTitle) {
+              if (mode === "multiObject1D") {
+                  graphTitle.textContent = "Position-Time Graph (1D)";
+              } else {
+                  graphTitle.textContent = "Trajectory Visualization (2D)";
+              }
+          }
+
+          clearMessages();
+          if (mode === '1d') {
+               showNote("1D Mode: Fill in <strong>exactly three</strong> fields.");
+          } else if (mode === 'basic') {
+               showNote("2D Mode: Fill in <strong>exactly three</strong> of V<sub>i</sub>, &Delta;x, &Delta;y, &theta;.");
+          } else if (mode === 'design') {
+               showNote("Design Mode: Fill in target &Delta;x, &Delta;y, and landing angle &phi;.");
+          } else if (mode === 'multiObject1D') { // NEW
+               showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
+          }
+          resetAnimation(); // Reset animation on mode change
+      }
+
+      // NEW: Toggle Object 3 inputs
+      function toggleObject3Inputs() {
+          showObject3 = !showObject3;
+          updateModeVisibility(); // Re-run visibility update to apply changes
+          calculate(); // Recalculate with new object count
+      }
+
+      // --- Message Display Functions ---
+      function clearMessages() {
+          messageDiv.innerHTML = "";
+      }
+
+      function showResult(htmlContent) {
+           clearMessages();
+           if (!resultContainer.querySelector('h2')) {
+               resultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+           }
+           messageDiv.innerHTML = `<div class="result">${htmlContent}</div>`;
+      }
+
+      function showError(text) {
+           clearMessages();
+           if (!resultContainer.querySelector('h2')) {
+               resultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+           }
+           messageDiv.innerHTML = `<div class="error">${text}</div>`;
+      }
+
+      function showNote(text) {
+           clearMessages();
+           if (!resultContainer.querySelector('h2')) {
+               resultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+           }
+           messageDiv.innerHTML = `<div class="note">${text}</div>`;
+      }
+
+      // --- Input Parsing ---
+      function getFloatValue(id, allowEmpty = false) {
+          const element = document.getElementById(id);
+          if (!element) return NaN;
+          const value = element.value.trim();
+          if (value === "") {
+              return allowEmpty ? null : NaN;
+          }
+          const num = parseFloat(value);
+          return isNaN(num) ? NaN : num;
+      }
+
+      // --- Result Formatting ---
+      function formatResultLine(label, value, unit) {
+          let displayValue;
+          if (typeof value === "number" && isFinite(value)) {
+              const precision = (label.includes("&theta;") || label.includes("&phi;")) ? 3 : 2;
+              displayValue = (Math.abs(value) < TOLERANCE * 10) ? (0).toFixed(precision) : value.toFixed(precision);
+          } else {
+              displayValue = value;
+          }
+          return `<p><strong>${label}:</strong> <span>${displayValue}</span> <span class="unit">${unit}</span></p>`;
+      }
+
+      // --- Clear Input Functions ---
+      function clear1DInputs() {
+          document.getElementById("v1d").value = "";
+          document.getElementById("vf1d").value = "";
+          document.getElementById("a1d").value = "";
+          document.getElementById("d1d").value = "";
+          document.getElementById("t1d").value = "";
+          clearMessages();
+          showNote("1D Mode: Fill in <strong>exactly three</strong> fields.");
+      }
+
+      function clearBasicInputs() {
+          document.getElementById("vi").value = "";
+          document.getElementById("dx").value = "";
+          document.getElementById("dy").value = "";
+          document.getElementById("angle").value = "";
+          document.getElementById("time").value = "";
+          clearMessages();
+          resetAnimation();
+          showNote("2D Mode: Fill in <strong>exactly three</strong> of V<sub>i</sub>, &Delta;x, &Delta;y, &theta;.");
+      }
+
+      function clearDesignInputs() {
+          document.getElementById("dxDesign").value = "";
+          document.getElementById("dyDesign").value = "";
+          document.getElementById("landingAngle").value = "";
+          clearMessages();
+          resetAnimation();
+          showNote("Design Mode: Fill in target &Delta;x, &Delta;y, and landing angle &phi;.");
+      }
+
+      function clearMultiObjectInputs() {
+          document.getElementById("obj1_x0").value = "";
+          document.getElementById("obj1_v0").value = "";
+          document.getElementById("obj1_a").value = "";
+          document.getElementById("obj2_x0").value = "";
+          document.getElementById("obj2_v0").value = "";
+          document.getElementById("obj2_a").value = "";
+          document.getElementById("obj3_x0").value = "";
+          document.getElementById("obj3_v0").value = "";
+          document.getElementById("obj3_a").value = "";
+          
+          // Reset Object 3 visibility if it's shown
+          if (showObject3) {
+              showObject3 = false;
+              updateModeVisibility();
+          }
+          
+          clearMessages();
+          resetAnimation();
+          showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
+      }
+
+      // --- 1D Kinematics Calculation (MODIFIED) ---
+      function calculate1DMode() {
+          const vi = getFloatValue("v1d", true);
+          const vf = getFloatValue("vf1d", true);
+          const a = getFloatValue("a1d", true);
+          const d = getFloatValue("d1d", true);
+          const t = getFloatValue("t1d", true);
+
+          const variables = { vi, vf, a, d, t };
+          const providedKeys = Object.keys(variables).filter(key => variables[key] !== null && isFinite(variables[key]));
+
+          if (providedKeys.length !== 3) {
+              showNote("1D Mode: Please fill in exactly <strong>three</strong> fields.");
+              return;
+          }
+
+          let sol = { ...variables };
+          const has = {
+              vi: providedKeys.includes("vi"),
+              vf: providedKeys.includes("vf"),
+              a: providedKeys.includes("a"),
+              d: providedKeys.includes("d"),
+              t: providedKeys.includes("t")
+          };
+
+          try {
+              if (has.vi && has.vf && has.t) {
+                  if (Math.abs(sol.t) < TOLERANCE) throw new Error("Time (t) cannot be zero.");
+                  sol.a = (sol.vf - sol.vi) / sol.t;
+                  sol.d = sol.vi * sol.t + 0.5 * sol.a * sol.t * sol.t;
+              } else if (has.vi && has.vf && has.a) {
+                  if (Math.abs(sol.a) < TOLERANCE) {
+                      if (Math.abs(sol.vf - sol.vi) > TOLERANCE) throw new Error("If acceleration is zero, Vi and Vf must be equal.");
+                      sol.t = NaN; // Or Infinity, time is indeterminate if d is not known
+                      sol.d = NaN;
+                  } else {
+                      sol.t = (sol.vf - sol.vi) / sol.a;
+                      sol.d = sol.vi * sol.t + 0.5 * sol.a * sol.t * sol.t;
+                  }
+              } else if (has.vi && has.vf && has.d) {
+                  const v_avg = (sol.vi + sol.vf) / 2;
+                  if (Math.abs(v_avg) < TOLERANCE) {
+                       if (Math.abs(sol.d) > TOLERANCE) throw new Error("Displacement must be zero if average velocity is zero.");
+                       sol.t = NaN; // Time is indeterminate
+                       sol.a = NaN; // Acceleration is indeterminate
+                  } else {
+                      sol.t = sol.d / v_avg;
+                  }
+                  if (sol.t < -TOLERANCE) throw new Error("Calculation resulted in negative time.");
+                  sol.t = Math.max(0, sol.t);
+                  if (Math.abs(sol.t) < TOLERANCE) {
+                       if(Math.abs(sol.vf - sol.vi) > TOLERANCE) throw new Error("Vf and Vi must be equal if time is zero.");
+                       sol.a = NaN; // Acceleration is indeterminate
+                  } else {
+                       sol.a = (sol.vf - sol.vi) / sol.t;
+                  }
+              } else if (has.vi && has.a && has.t) {
+                  sol.vf = sol.vi + sol.a * sol.t;
+                  sol.d = sol.vi * sol.t + 0.5 * sol.a * sol.t * sol.t;
+              } else if (has.vi && has.a && has.d) {
+                  const A = 0.5 * sol.a;
+                  const B = sol.vi;
+                  const C = -sol.d;
+
+                  if (Math.abs(A) < TOLERANCE) { // Linear case: a=0
+                      if (Math.abs(B) < TOLERANCE) { // vi=0
+                          if (Math.abs(C) > TOLERANCE) throw new Error("Displacement must be zero if Vi and a are zero.");
+                          sol.t = 0; // d=0, vi=0, a=0 -> t=0
+                      } else { // vi != 0
+                          sol.t = -C / B; // d = vi*t
+                      }
+                      if (sol.t < -TOLERANCE) throw new Error("Calculation resulted in negative time.");
+                      sol.t = Math.max(0, sol.t);
+                      sol.vf = sol.vi + sol.a * sol.t; // Since a=0, vf=vi
+                  } else { // Quadratic case: a!=0
+                      const disc = B * B - 4 * A * C;
+                      if (disc < -TOLERANCE) throw new Error("No real solution for time.");
+                      
+                      const sqrtDisc = Math.sqrt(Math.max(0, disc));
+                      const t1 = (-B + sqrtDisc) / (2 * A);
+                      const t2 = (-B - sqrtDisc) / (2 * A);
+
+                      const validTimes = [t1, t2]
+                          .filter(t => t >= -TOLERANCE)
+                          .map(t => Math.max(0, t));
+                          
+                      const uniqueTimes = [...new Set(validTimes.map(t => t.toPrecision(10)))].map(s => parseFloat(s));
+
+                      if (uniqueTimes.length === 0) throw new Error("No positive real solution for time.");
+
+                      let resultHTML = '';
+                      uniqueTimes.sort((a, b) => a - b).forEach((t_sol, index) => {
+                          const vf_sol = sol.vi + sol.a * t_sol;
+                          resultHTML += `<div class="group-title">Solution ${index + 1}</div>`;
+                          resultHTML += formatResultLine("Initial Velocity, V<sub>i</sub>", sol.vi, "m/s");
+                          resultHTML += formatResultLine("Final Velocity, V<sub>f</sub>", vf_sol, "m/s");
+                          resultHTML += formatResultLine("Acceleration, a", sol.a, "m/s²");
+                          resultHTML += formatResultLine("Displacement, d", sol.d, "m");
+                          resultHTML += formatResultLine("Time, t", t_sol, "s");
+                      });
+                      
+                      showResult(resultHTML);
+                      return; // Exit function to prevent the default single summary.
+                  }
+              } else if (has.vi && has.t && has.d) {
+                  if (Math.abs(sol.t) < TOLERANCE) {
+                      if (Math.abs(sol.d) > TOLERANCE) throw new Error("Displacement must be zero if time is zero.");
+                      sol.a = NaN; // Indeterminate
+                  } else {
+                      sol.a = 2 * (sol.d - sol.vi * sol.t) / (sol.t * sol.t);
+                  }
+                  sol.vf = sol.vi + sol.a * sol.t;
+              } else if (has.vf && has.a && has.t) {
+                  sol.vi = sol.vf - sol.a * sol.t;
+                  sol.d = sol.vi * sol.t + 0.5 * sol.a * sol.t * sol.t;
+              } else if (has.vf && has.a && has.d) {
+                  const A = 0.5 * sol.a;
+                  const B = -sol.vf;
+                  const C = sol.d;
+
+                  if (Math.abs(A) < TOLERANCE) { // Linear case: a=0
+                      if (Math.abs(B) < TOLERANCE) { // vf=0
+                          if (Math.abs(C) > TOLERANCE) throw new Error("Displacement must be zero if Vf and a are zero.");
+                          sol.t = NaN; // If d=0, vf=0, a=0, time is indeterminate.
+                          sol.vi = 0;
+                      } else { // vf != 0
+                          sol.t = C / B; // d = vf*t (since a=0, vi=vf)
+                      }
+                      if (sol.t < -TOLERANCE) throw new Error("Calculation resulted in negative time.");
+                      sol.t = Math.max(0, sol.t);
+                      sol.vi = sol.vf - sol.a * sol.t;
+                  } else { // Quadratic case: a!=0
+                      const disc = B * B - 4 * A * C;
+                      if (disc < -TOLERANCE) throw new Error("No real solution for time.");
+
+                      const sqrtDisc = Math.sqrt(Math.max(0, disc));
+                      const t1 = (-B + sqrtDisc) / (2 * A);
+                      const t2 = (-B - sqrtDisc) / (2 * A);
+                      
+                      const validTimes = [t1, t2]
+                          .filter(t => t >= -TOLERANCE)
+                          .map(t => Math.max(0, t));
+
+                      const uniqueTimes = [...new Set(validTimes.map(t => t.toPrecision(10)))].map(s => parseFloat(s));
+
+                      if (uniqueTimes.length === 0) throw new Error("No positive real solution for time.");
+
+                      let resultHTML = '';
+                      uniqueTimes.sort((a, b) => a - b).forEach((t_sol, index) => {
+                          const vi_sol = sol.vf - sol.a * t_sol;
+                          resultHTML += `<div class="group-title">Solution ${index + 1}</div>`;
+                          resultHTML += formatResultLine("Initial Velocity, V<sub>i</sub>", vi_sol, "m/s");
+                          resultHTML += formatResultLine("Final Velocity, V<sub>f</sub>", sol.vf, "m/s");
+                          resultHTML += formatResultLine("Acceleration, a", sol.a, "m/s²");
+                          resultHTML += formatResultLine("Displacement, d", sol.d, "m");
+                          resultHTML += formatResultLine("Time, t", t_sol, "s");
+                      });
+                      
+                      showResult(resultHTML);
+                      return; // Exit function
+                  }
+              } else if (has.vf && has.t && has.d) {
+                  if (Math.abs(sol.t) < TOLERANCE) {
+                      if (Math.abs(sol.d) > TOLERANCE) throw new Error("Displacement must be zero if time is zero.");
+                      sol.a = NaN; // Indeterminate
+                      sol.vi = sol.vf;
+                  } else {
+                      sol.vi = (2 * sol.d) / sol.t - sol.vf;
+                      sol.a = (sol.vf - sol.vi) / sol.t;
+                  }
+              } else if (has.a && has.t && has.d) {
+                  if (Math.abs(sol.t) < TOLERANCE) {
+                      if (Math.abs(sol.d) > TOLERANCE) throw new Error("Displacement must be zero if time is zero.");
+                      sol.vi = NaN; // Indeterminate
+                      sol.vf = NaN; // Indeterminate
+                  } else {
+                      sol.vi = (sol.d - 0.5 * sol.a * sol.t * sol.t) / sol.t;
+                      sol.vf = sol.vi + sol.a * sol.t;
+                  }
+              } else {
+                  throw new Error("Unexpected combination of inputs.");
+              }
+
+              let resultHTML = `<div class="group-title">1D Kinematics Results</div>`;
+              resultHTML += formatResultLine("Initial Velocity, V<sub>i</sub>", sol.vi, "m/s");
+              resultHTML += formatResultLine("Final Velocity, V<sub>f</sub>", sol.vf, "m/s");
+              resultHTML += formatResultLine("Acceleration, a", sol.a, "m/s²");
+              resultHTML += formatResultLine("Displacement, d", sol.d, "m");
+              resultHTML += formatResultLine("Time, t", sol.t, "s");
+              showResult(resultHTML);
+
+          } catch (e) {
+              console.error("1D Calc Error:", e);
+              showError("1D Calculation Error: " + e.message);
+          }
+        }
+
+        // --- 2D Projectile Motion Calculation ---
+        function calculateBasicMode(g) {
+            globalG = g;
+            const vi = getFloatValue("vi", true);
+            const dx = getFloatValue("dx", true);
+            const dy = getFloatValue("dy", true);
+            const angleDeg = getFloatValue("angle", true);
+            const timeOptional = getFloatValue("time", true);
+            const inputs = { vi, dx, dy, angle: angleDeg };
+            let providedCount = 0;
+            let missingKeys = [];
+            for (const key in inputs) {
+                const value = inputs[key];
+                if (value !== null && isFinite(value)) {
+                    providedCount++;
+                } else {
+                    missingKeys.push(key);
+                }
+            }
+            if (providedCount !== 3) {
+                showNote("2D: Please fill in exactly <strong>three</strong> of V<sub>i</sub>, &Delta;x, &Delta;y, &theta;.");
+                resetAnimation();
+                return;
+            }
+            if (missingKeys.length !== 1) {
+                console.error("Internal Error:", missingKeys);
+                showError("Internal error: Could not determine the variable to calculate.");
+                resetAnimation();
+                return;
+            }
+            const missingVar = missingKeys[0];
+            let t_flight, finalVi, finalAngleRad, finalDx, finalDy;
+            let angleRad = (inputs.angle !== null && isFinite(inputs.angle)) ? inputs.angle * Math.PI / 180 : null;
+            let tan1, angle1, angle2;
+            try {
+                switch (missingVar) {
+                    case "dx":
+                        if (inputs.vi === null || angleRad === null || inputs.dy === null) throw new Error("Inputs V<sub>i</sub>, &theta;, and &Delta;y are required.");
+                        finalVi = inputs.vi;
+                        finalAngleRad = angleRad;
+                        finalDy = inputs.dy;
+                        if (finalVi <= 0) throw new Error("Initial velocity must be positive.");
+                        const Viy_calc = finalVi * Math.sin(finalAngleRad);
+                        const A = 0.5 * g;
+                        const B = -Viy_calc;
+                        const C = finalDy;
+                        const disc = B * B - 4 * A * C;
+                        if (disc < -TOLERANCE) throw new Error("No real solution for time.");
+                        const sqrtDisc = Math.sqrt(Math.max(0, disc));
+                        const t1_dx = (-B + sqrtDisc) / (2 * A);
+                        const t2_dx = (-B - sqrtDisc) / (2 * A);
+                        if (t1_dx < -TOLERANCE && t2_dx < -TOLERANCE) throw new Error("Negative time calculated.");
+                        t_flight = Math.max(t1_dx, t2_dx);
+                        if (t_flight < -TOLERANCE) throw new Error("No positive time solution.");
+                        t_flight = Math.max(0, t_flight);
+                        finalDx = finalVi * Math.cos(finalAngleRad) * t_flight;
+                        break;
+                    case "dy":
+                        if (inputs.vi === null || angleRad === null || inputs.dx === null) throw new Error("Inputs V<sub>i</sub>, &theta;, and &Delta;x are required.");
+                        finalVi = inputs.vi;
+                        finalAngleRad = angleRad;
+                        finalDx = inputs.dx;
+                        if (finalVi <= 0) throw new Error("Initial velocity must be positive.");
+                        const Vix_calc_dy = finalVi * Math.cos(finalAngleRad);
+                        if (Math.abs(Vix_calc_dy) < TOLERANCE) {
+                            if (Math.abs(finalDx) > TOLERANCE) throw new Error("For vertical launch, horizontal displacement must be zero.");
+                            throw new Error("Cannot calculate &Delta;y without time for vertical launch.");
+                        }
+                        t_flight = finalDx / Vix_calc_dy;
+                        if (t_flight < -TOLERANCE) throw new Error("Negative time calculated.");
+                        t_flight = Math.max(0, t_flight);
+                        finalDy = finalVi * Math.sin(finalAngleRad) * t_flight - 0.5 * g * t_flight * t_flight;
+                        break;
+                    case "vi":
+                        if (angleRad === null || inputs.dx === null || inputs.dy === null) throw new Error("Inputs &theta;, &Delta;x, and &Delta;y are required.");
+                        finalAngleRad = angleRad;
+                        finalDx = inputs.dx;
+                        finalDy = inputs.dy;
+                        if (finalVi <= 0) throw new Error("Initial velocity must be positive.");
+                        const cosTheta = Math.cos(finalAngleRad);
+                        const sinTheta = Math.sin(finalAngleRad);
+                        if (Math.abs(cosTheta) < TOLERANCE) {
+                             if (Math.abs(finalDx) > TOLERANCE) throw new Error("For vertical launch, dx must be zero.");
+                             throw new Error("Cannot calculate V<sub>i</sub> for vertical launch without time.");
+                        }
+                        const tanTheta = sinTheta / cosTheta;
+                        const term1 = tanTheta * finalDx - finalDy;
+                        const numerator = g * finalDx * finalDx;
+                        const denominator = 2 * cosTheta * cosTheta * term1;
+                        if (Math.abs(denominator) < TOLERANCE) {
+                             if (Math.abs(term1) < TOLERANCE) {
+                                  throw new Error("Infinite speed required.");
+                             } else {
+                                  throw new Error("Internal error calculating V<sub>i</sub>.");
+                             }
+                        }
+                        if (numerator / denominator < -TOLERANCE) {
+                            throw new Error("Negative square encountered in V<sub>i</sub> calculation.");
+                        }
+                        const Vi_squared = Math.max(0, numerator / denominator);
+                        finalVi = Math.sqrt(Vi_squared);
+                        const Vix_calc_vi = finalVi * cosTheta;
+                        if (Math.abs(Vix_calc_vi) < TOLERANCE) {
+                             if (Math.abs(finalDx) > TOLERANCE) throw new Error("Internal error: Vix is zero.");
+                             throw new Error("Cannot determine time for vertical launch without time.");
+                        }
+                        t_flight = finalDx / Vix_calc_vi;
+                        if (t_flight < -TOLERANCE) throw new Error("Negative time calculated.");
+                        t_flight = Math.max(0, t_flight);
+                        break;
+                    case "angle":
+                        if (inputs.vi === null || inputs.dx === null || inputs.dy === null) throw new Error("Inputs V<sub>i</sub>, &Delta;x, and &Delta;y are required.");
+                        finalVi = inputs.vi;
+                        finalDx = inputs.dx;
+                        finalDy = inputs.dy;
+                        if (finalVi <= 0) throw new Error("Initial velocity must be positive.");
+                        if (Math.abs(finalDx) < TOLERANCE) {
+                            const A_vert = 0.5 * g;
+                            const B_vert = -finalVi;
+                            const C_vert = finalDy;
+                            const disc_vert = B_vert * B_vert - 4 * A_vert * C_vert;
+                            if (disc_vert < -TOLERANCE) throw new Error("Target &Delta;y unreachable for vertical launch.");
+                            const sqrtDisc_vert = Math.sqrt(Math.max(0, disc_vert));
+                            const t1_vert = (-B_vert + sqrtDisc_vert) / (2 * A_vert);
+                            const t2_vert = (-B_vert - sqrtDisc_vert) / (2 * A_vert);
+                            if (t1_vert < -TOLERANCE && t2_vert < -TOLERANCE) throw new Error("No positive time for vertical launch.");
+                            t_flight = Math.max(t1_vert, t2_vert);
+                            if (t_flight < -TOLERANCE) throw new Error("No positive time found.");
+                            t_flight = Math.max(0, t_flight);
+                            finalAngleRad = Math.PI / 2;
+                        } else {
+                            const A_angle = (g * finalDx * finalDx) / (2 * finalVi * finalVi);
+                            const B_angle = -finalDx;
+                            const C_angle = finalDy + A_angle;
+                            if (Math.abs(A_angle) < TOLERANCE) {
+                                if (Math.abs(B_angle) < TOLERANCE) {
+                                     throw new Error("Internal error: dx=0 case missed.");
+                                }
+                                const tan_theta = C_angle / (-B_angle);
+                                finalAngleRad = Math.atan(tan_theta);
+                            } else {
+                                const disc_angle = B_angle * B_angle - 4 * A_angle * C_angle;
+                                if (disc_angle < -TOLERANCE) throw new Error("No real launch angle solution.");
+                                const sqrtDisc_angle = Math.sqrt(Math.max(0, disc_angle));
+                                tan1 = (-B_angle + sqrtDisc_angle) / (2 * A_angle);
+                                const tan2 = (-B_angle - sqrtDisc_angle) / (2 * A_angle);
+                                angle1 = Math.atan(tan1);
+                                angle2 = Math.atan(tan2);
+                                finalAngleRad = angle2;
+                            }
+                            const Vix_calc_ang = finalVi * Math.cos(finalAngleRad);
+                            if (Math.abs(Vix_calc_ang) < TOLERANCE) throw new Error("Internal error: Vix is zero.");
+                            t_flight = finalDx / Vix_calc_ang;
+                            if (t_flight < -TOLERANCE) throw new Error("Negative time calculated.");
+                            t_flight = Math.max(0, t_flight);
+                        }
+                        break;
+                    default:
+                        throw new Error("Unexpected error: Could not determine missing variable.");
+                }
+
+                if (!isFinite(t_flight) || t_flight < -TOLERANCE) {
+                    throw new Error("Invalid time of flight calculated.");
+                }
+                t_flight = Math.max(0, t_flight);
+                const finalAngleDeg = finalAngleRad * 180 / Math.PI;
+                const Vix = finalVi * Math.cos(finalAngleRad);
+                const Viy = finalVi * Math.sin(finalAngleRad);
+                globalVix = Vix;
+                globalViy = Viy;
+                const t_peak = (Math.abs(g) > TOLERANCE && Viy > TOLERANCE) ? Viy / g : 0;
+                const h_max = (t_peak > 0) ? (Viy * t_peak - 0.5 * g * t_peak * t_peak) : 0;
+                const Vfx = Vix;
+                const Vfy = Viy - g * t_flight;
+                const Vf_mag = Math.sqrt(Vfx * Vfx + Vfy * Vfy);
+                const Vf_angle_rad = Math.atan2(Vfy, Vfx);
+                const Vf_angle_deg = Vf_angle_rad * 180 / Math.PI;
+
+                let resultHTML = `<div class="result">`;
+                resultHTML += `<div class="group-title">Calculated Result</div>`;
+                switch (missingVar) {
+                    case "vi": resultHTML += formatResultLine("Initial Velocity, V<sub>i</sub>", finalVi, "m/s"); break;
+                    case "angle": resultHTML += formatResultLine("Launch Angle, &theta;", finalAngleDeg, "°"); break;
+                    case "dy": resultHTML += formatResultLine("Vertical Displacement, &Delta;y", finalDy, "m"); break;
+                    case "dx": resultHTML += formatResultLine("Horizontal Displacement, &Delta;x", finalDx, "m"); break;
+                }
+                if (missingVar === 'angle' && angle1 !== undefined && angle2 !== undefined && Math.abs(angle1 - angle2) > TOLERANCE) {
+                     const chosenAngle = finalAngleRad;
+                     const otherAngle = (Math.abs(chosenAngle - angle1) < TOLERANCE) ? angle2 : angle1;
+                     resultHTML += `<p style="font-size: 0.9em; color: var(--label-color);"><em>Note: A second launch angle solution exists: ${(otherAngle * 180 / Math.PI).toFixed(2)}°</em></p>`;
+                }
+                resultHTML += `<div class="group-title">Trajectory Summary</div>`;
+                resultHTML += formatResultLine("Time of Flight, t", t_flight, "s");
+                resultHTML += formatResultLine("Max Height (above launch)", h_max, "m");
+                resultHTML += formatResultLine("Time to Max Height", t_peak, "s");
+                resultHTML += `<div class="group-title">Initial Conditions</div>`;
+                resultHTML += formatResultLine("Initial Velocity, V<sub>i</sub>", finalVi, "m/s");
+                resultHTML += formatResultLine("Launch Angle, &theta;", finalAngleDeg, "°");
+                resultHTML += formatResultLine("Initial Horizontal Vel., V<sub>ix</sub>", Vix, "m/s");
+                resultHTML += formatResultLine("Initial Vertical Vel., V<sub>iy</sub>", Viy, "m/s");
+                resultHTML += `<div class="group-title">Final State (at t = ${t_flight.toFixed(2)}s)</div>`;
+                resultHTML += formatResultLine("Final Horizontal Disp., &Delta;x", finalDx, "m");
+                resultHTML += formatResultLine("Final Vertical Disp., &Delta;y", finalDy, "m");
+                resultHTML += formatResultLine("Final Velocity Mag., V<sub>f</sub>", Vf_mag, "m/s");
+                resultHTML += formatResultLine("Final Velocity Angle, &phi;", Vf_angle_deg, "°");
+                resultHTML += formatResultLine("Final Horizontal Vel., V<sub>fx</sub>", Vfx, "m/s");
+                resultHTML += formatResultLine("Final Vertical Vel., V<sub>fy</sub>", Vfy, "m/s");
+                if (timeOptional !== null && isFinite(timeOptional) && timeOptional >= 0) {
+                    const t_opt = Math.min(timeOptional, t_flight);
+                    const t_opt_calc = timeOptional;
+                    const dx_opt = Vix * t_opt_calc;
+                    const dy_opt = Viy * t_opt_calc - 0.5 * g * t_opt_calc * t_opt_calc;
+                    const vx_opt = Vix;
+                    const vy_opt = Viy - g * t_opt_calc;
+                    const speed_opt = Math.sqrt(vx_opt * vx_opt + vy_opt * vy_opt);
+                    const angle_opt = Math.atan2(vy_opt, vx_opt) * 180 / Math.PI;
+                    resultHTML += `<div class="group-title">State at Optional Time (t = ${t_opt_calc.toFixed(2)}s)</div>`;
+                    resultHTML += formatResultLine("Horizontal Disp., &Delta;x", dx_opt, "m");
+                    resultHTML += formatResultLine("Vertical Disp., &Delta;y", dy_opt, "m");
+                    resultHTML += formatResultLine("Horizontal Vel., V<sub>x</sub>", vx_opt, "m/s");
+                    resultHTML += formatResultLine("Vertical Vel., V<sub>y</sub>", vy_opt, "m/s");
+                    resultHTML += formatResultLine("Speed", speed_opt, "m/s");
+                    resultHTML += formatResultLine("Velocity Angle", angle_opt, "°");
+                }
+                resultHTML += `</div>`;
+                showResult(resultHTML);
+                prepareAndDrawTrajectory(Vix, Viy, t_flight, g, dy);
+            } catch (e) {
+                console.error("Basic Mode Calc Error:", e);
+                showError("2D Mode Calculation Error: " + e.message);
+                resetAnimation();
+            }
+        }
+
+        // --- 2D Projectile Motion (Design Mode) Calculation ---
+        function calculateDesignMode(g) {
+            globalG = g;
+            const dx_target = getFloatValue("dxDesign");
+            const dy_target = getFloatValue("dyDesign");
+            const landingAngleDeg = getFloatValue("landingAngle");
+            if (isNaN(dx_target) || isNaN(dy_target) || isNaN(landingAngleDeg)) {
+                showNote("Design Mode: Please fill in target &Delta;x, &Delta;y, and desired landing angle &phi;.");
+                resetAnimation();
+                return;
+            }
+            if (Math.abs(g) < TOLERANCE) {
+                showError("Design mode requires non-zero gravitational acceleration (g).");
+                resetAnimation();
+                return;
+            }
+            if (Math.abs(dx_target) < TOLERANCE) {
+                showError("Design mode requires a non-zero Horizontal Displacement (&Delta;x).");
+                resetAnimation();
+                return;
+            }
+            try {
+                const phi_rad = landingAngleDeg * Math.PI / 180;
+                const tan_phi = Math.tan(phi_rad);
+                const tan_theta = (2 * dy_target / dx_target) - tan_phi;
+                const theta_rad = Math.atan(tan_theta);
+                const theta_deg = theta_rad * 180 / Math.PI;
+                const denominator_VixSq = tan_theta - tan_phi;
+                let finalVi;
+                if (Math.abs(denominator_VixSq) < TOLERANCE) {
+                    if (Math.abs(dy_target) > TOLERANCE) {
+                        throw new Error("Calculation error: Launch angle approx equals landing angle, but target &Delta;y is not zero.");
+                    }
+                    const sin2theta = Math.sin(2 * theta_rad);
+                    if (Math.abs(sin2theta) < TOLERANCE) throw new Error("Cannot calculate V<sub>i</sub>: Launch angle is near 0° or 90°.");
+                    const Vi_sq = g * dx_target / sin2theta;
+                    if (Vi_sq < -TOLERANCE) throw new Error("Calculation resulted in negative V<sub>i</sub>².");
+                    finalVi = Math.sqrt(Math.max(0, Vi_sq));
+                } else {
+                    const Vix_sq = g * dx_target / denominator_VixSq;
+                    if (Vix_sq < -TOLERANCE) {
+                        throw new Error("Calculation resulted in negative V<sub>ix</sub>².");
+                    }
+                    const Vix = Math.sqrt(Math.max(0, Vix_sq));
+                    const cosTheta = Math.cos(theta_rad);
+                    if (Math.abs(cosTheta) < TOLERANCE) throw new Error("Calculated launch angle is vertical.");
+                    finalVi = Vix / cosTheta;
+                }
+                const finalAngleRad = theta_rad;
+                const finalAngleDeg = theta_deg;
+                if (!isFinite(finalVi) || finalVi <= 0) {
+                    throw new Error("Calculated Initial Velocity (V<sub>i</sub>) is invalid.");
+                }
+                const Vix = finalVi * Math.cos(finalAngleRad);
+                const Viy = finalVi * Math.sin(finalAngleRad);
+                globalVix = Vix;
+                globalViy = Viy;
+                if (Math.abs(Vix) < TOLERANCE) throw new Error("Horizontal velocity Vix is near zero.");
+                const t_flight = dx_target / Vix;
+                if (t_flight < -TOLERANCE) throw new Error("Negative time of flight calculated.");
+                const t_flight_nonNeg = Math.max(0, t_flight);
+                const t_peak = (Math.abs(g) > TOLERANCE && Viy > TOLERANCE) ? Viy / g : 0;
+                const h_max = (t_peak > 0) ? (Viy * t_peak - 0.5 * g * t_peak * t_peak) : 0;
+                const Vfx_check = Vix;
+                const Vfy_check = Viy - g * t_flight_nonNeg;
+                const Vf_mag_check = Math.sqrt(Vfx_check * Vfx_check + Vfy_check * Vfy_check);
+                const Vf_angle_rad_check = Math.atan2(Vfy_check, Vfx_check);
+                const Vf_angle_deg_check = Vf_angle_rad_check * 180 / Math.PI;
+                const dx_check = Vix * t_flight_nonNeg;
+                const dy_check = Viy * t_flight_nonNeg - 0.5 * g * t_flight_nonNeg * t_flight_nonNeg;
+                let resultHTML = `<div class="result">`;
+                resultHTML += `<div class="group-title">Design Mode Results: Required Launch</div>`;
+                resultHTML += formatResultLine("Launch Angle, &theta;", finalAngleDeg, "°");
+                resultHTML += formatResultLine("Initial Velocity, V<sub>i</sub>", finalVi, "m/s");
+                resultHTML += `<div class="group-title">Resulting Trajectory</div>`;
+                resultHTML += formatResultLine("Time of Flight, t", t_flight_nonNeg, "s");
+                resultHTML += formatResultLine("Max Height (above launch)", h_max, "m");
+                resultHTML += formatResultLine("Time to Max Height", t_peak, "s");
+                resultHTML += `<div class="group-title">Initial Velocity Components</div>`;
+                resultHTML += formatResultLine("Initial Horizontal Vel., V<sub>ix</sub>", Vix, "m/s");
+                resultHTML += formatResultLine("Initial Vertical Vel., V<sub>iy</sub>", Viy, "m/s");
+                resultHTML += `<div class="group-title">Achieved Final State (Verification)</div>`;
+                resultHTML += formatResultLine("Final Horizontal Disp., &Delta;x", dx_check, "m");
+                resultHTML += formatResultLine("Final Vertical Disp., V<sub>fy</sub>", dy_check, "m");
+                resultHTML += formatResultLine("Final Velocity Mag., V<sub>f</sub>", Vf_mag_check, "m/s");
+                resultHTML += formatResultLine("Final Velocity Angle, &phi;", Vf_angle_deg_check, "°");
+                resultHTML += formatResultLine("Final Horizontal Vel., V<sub>fx</sub>", Vfx_check, "m/s");
+                resultHTML += formatResultLine("Final Vertical Vel., V<sub>fy</sub>", Vfy_check, "m/s");
+                resultHTML += `</div>`;
+                showResult(resultHTML);
+                prepareAndDrawTrajectory(Vix, Viy, t_flight_nonNeg, g, dy_target);
+            } catch (e) {
+                console.error("Design Mode Calc Error:", e);
+                showError("Design Mode Calculation Error: " + e.message);
+                resetAnimation();
+            }
+        }
+
+        // NEW: Multi-Object 1D Calculation
+        function calculateMultiObject1DMode() {
+            multiObjectData = []; // Clear previous data
+            let minTime = 0;
+            let maxTime = 0;
+            let minPosition = 0; // Initialize minPosition to 0 to ensure 0 is considered for scaling
+            let maxPosition = 0; // Initialize maxPosition to 0 to ensure 0 is considered for scaling
+            let meetingPoints = []; // Store {t, x} for meeting points
+
+            const objectsToProcess = [];
+            // Object 1
+            objectsToProcess.push({
+                id: 1,
+                x0: getFloatValue("obj1_x0"),
+                v0: getFloatValue("obj1_v0"),
+                a: getFloatValue("obj1_a"),
+                color: objectColors[0],
+                label: "Object 1"
+            });
+
+            // Object 2
+            objectsToProcess.push({
+                id: 2,
+                x0: getFloatValue("obj2_x0"),
+                v0: getFloatValue("obj2_v0"),
+                a: getFloatValue("obj2_a"),
+                color: objectColors[1],
+                label: "Object 2"
+            });
+
+            // Object 3 (if visible)
+            if (showObject3) {
+                objectsToProcess.push({
+                    id: 3,
+                    x0: getFloatValue("obj3_x0"),
+                    v0: getFloatValue("obj3_v0"),
+                    a: getFloatValue("obj3_a"),
+                    color: objectColors[2],
+                    label: "Object 3"
+                });
+            }
+
+            // Validate inputs for each object
+           
+            for (const obj of objectsToProcess) {
+                if (isNaN(obj.x0) || isNaN(obj.v0) || isNaN(obj.a)) {
+                    showError(`Multi-Object 1D: Please ensure all inputs (Initial Position, Initial Velocity, Acceleration) are valid numbers for ${obj.label}.`);
+                    resetAnimation();
+                    return;
+                }
+                multiObjectData.push(obj); // Store valid input data
+            }
+
+            if (multiObjectData.length < 2) {
+                showNote("Multi-Object 1D Mode: Please enter data for at least two objects.");
+                resetAnimation();
+                return;
+            }
+
+            // Calculate meeting points and determine max time/position for graph
+            let resultHTML = `<div class="result"><div class="group-title">Meeting Points</div>`;
+            let hasMeetingPoints = false;
+
+            // Compare all pairs of objects
+            for (let i = 0; i < multiObjectData.length; i++) {
+                for (let j = i + 1; j < multiObjectData.length; j++) {
+                    const objA = multiObjectData[i];
+                    const objB = multiObjectData[j];
+
+                    // Equation: (0.5*aA - 0.5*aB)t^2 + (v0A - v0B)t + (x0A - x0B) = 0
+                    const A_quad = 0.5 * (objA.a - objB.a);
+                    const B_quad = objA.v0 - objB.v0;
+                    const C_quad = objA.x0 - objB.x0;
+
+                    let times = [];
+
+                    if (Math.abs(A_quad) < TOLERANCE) { // Linear equation: Bt + C = 0
+                        if (Math.abs(B_quad) < TOLERANCE) { // Both A and B are zero
+                            if (Math.abs(C_quad) < TOLERANCE) {
+                                // Identical trajectories
+                                resultHTML += `<p><strong>${objA.label} and ${objB.label}:</strong> <span>Always at the same position.</span></p>`;
+                                hasMeetingPoints = true;
+                                // For graphing, we'll consider a default time range
+                                maxTime = Math.max(maxTime, 10);
+                            } else {
+                                // Parallel lines, never meet
+                                resultHTML += `<p><strong>${objA.label} and ${objB.label}:</strong> <span>Never meet.</span></p>`;
+                            }
+                        } else { // Linear solution: t = -C / B
+                            const t_meet = -C_quad / B_quad;
+                            if (t_meet >= -TOLERANCE) { // Only consider non-negative time
+                                times.push(Math.max(0, t_meet));
+                            }
+                        }
+                    } else { // Quadratic equation
+                        const discriminant = B_quad * B_quad - 4 * A_quad * C_quad;
+                        if (discriminant >= -TOLERANCE) { // Real solutions
+                            const sqrtDisc = Math.sqrt(Math.max(0, discriminant));
+                            const t1 = (-B_quad + sqrtDisc) / (2 * A_quad);
+                            const t2 = (-B_quad - sqrtDisc) / (2 * A_quad);
+
+                            if (t1 >= -TOLERANCE) times.push(Math.max(0, t1));
+                            if (t2 >= -TOLERANCE && Math.abs(t1 - t2) > TOLERANCE) times.push(Math.max(0, t2)); // Avoid duplicate times
+                        }
+                    }
+
+                    times = times.sort((a, b) => a - b); // Sort times in ascending order
+
+                    if (times.length > 0) {
+                        hasMeetingPoints = true;
+                        resultHTML += `<div class="group-title">${objA.label} and ${objB.label} Meeting Points</div>`;
+                        times.forEach(t => {
+                            const x_meet_A = objA.x0 + objA.v0 * t + 0.5 * objA.a * t * t;
+                            meetingPoints.push({ t, x: x_meet_A, objects: [objA.id, objB.id] });
+                            resultHTML += formatResultLine(`Time`, t, "s");
+                            resultHTML += formatResultLine(`Position`, x_meet_A, "m");
+                        });
+                    } else if (Math.abs(A_quad) > TOLERANCE || Math.abs(B_quad) > TOLERANCE || Math.abs(C_quad) > TOLERANCE) {
+                         // Only show "never meet" if they are not identical and no meeting points found
+                        resultHTML += `<p><strong>${objA.label} and ${objB.label}:</strong> <span>Never meet.</span></p>`;
+                    }
+                }
+            }
+
+            if (!hasMeetingPoints && multiObjectData.length >= 2) {
+                resultHTML += `<p>No meeting points found for any pair of objects.</p>`;
+            } else if (multiObjectData.length < 2) {
+                resultHTML += `<p>Enter data for at least two objects to find meeting points.</p>`;
+            }
+            resultHTML += `</div>`;
+            showResult(resultHTML);
+
+            // Determine max time for graph based on meeting points or default
+            if (meetingPoints.length > 0) {
+                maxTime = Math.max(...meetingPoints.map(p => p.t)) * 1.2; // Extend time a bit beyond last meeting
+            } else {
+                // If no meeting points, use a default time or base on initial velocities/accelerations
+                maxTime = 10; // Default to 10 seconds if no meeting points
+                // Could be more sophisticated: e.g., if objects are moving apart, keep time short; if converging, estimate a reasonable time.
+            }
+            maxTime = Math.max(maxTime, 5); // Ensure a minimum time for visualization
+
+            // Generate points for each object's trajectory for graphing
+            globalPoints = []; // Reuse globalPoints for multi-object trajectories
+            let allXValues = [];
+
+            multiObjectData.forEach(obj => {
+                const objPoints = [];
+                const numGraphPoints = 200; // Number of points to draw the curve smoothly
+                for (let i = 0; i <= numGraphPoints; i++) {
+                    const t = (i / numGraphPoints) * maxTime;
+                    const x = obj.x0 + obj.v0 * t + 0.5 * obj.a * t * t;
+                    objPoints.push({ t, x });
+                    allXValues.push(x);
+                }
+                globalPoints.push({
+                    id: obj.id,
+                    label: obj.label,
+                    color: obj.color,
+                    trajectory: objPoints // This is where the trajectory data is attached
+                });
+            });
+
+            // Determine graph scale and offsets for Position-Time graph
+            // Ensure 0 is always included in the position range for correct axis placement
+            minPosition = Math.min(0, ...allXValues, ...multiObjectData.map(obj => obj.x0));
+            maxPosition = Math.max(0, ...allXValues, ...multiObjectData.map(obj => obj.x0));
+
+            const canvasWidth = trajectoryCanvas.width;
+            const canvasHeight = trajectoryCanvas.height;
+            const availableWidth = canvasWidth - 2 * GRAPH_MARGIN;
+            const availableHeight = canvasHeight - 2 * GRAPH_MARGIN;
+
+            const rangeX = maxTime; // Time range (starts from 0)
+            const rangeY = maxPosition - minPosition; // Position range
+
+            globalScaleX = (Math.abs(rangeX) < TOLERANCE) ? 1 : availableWidth / rangeX;
+            globalScaleY = (Math.abs(rangeY) < TOLERANCE) ? 1 : availableHeight / rangeY;
+
+            // globalOffsetX is the canvas X for data t=0 (left edge of plotting area)
+            globalOffsetX = GRAPH_MARGIN;
+            // globalOffsetY is the canvas Y for data x=globalMinPosition (bottom of plot area).
+            // This means that the canvas Y coordinate for the data point `globalMinPosition` is `canvasHeight - GRAPH_MARGIN`.
+            globalOffsetY = canvasHeight - GRAPH_MARGIN;
+
+            // Store meeting points globally for drawing
+            globalMeetingPoints = meetingPoints;
+            globalMaxTime = maxTime; // Store max time for animation slider
+            globalMinPosition = minPosition; // Store for state display scaling
+            globalMaxPosition = maxPosition; // Store for state display scaling
+
+            prepareAndDrawMultiObject1DGraph(); // Draw the graph
+            resetAnimation(); // Reset animation to start
+        }
+
+        /**
+         * Draws the X and Y axes for the multi-object 1D graph.
+         * @param {CanvasRenderingContext2D} ctx - The 2D rendering context of the canvas.
+         * @param {number} width - The width of the canvas.
+         * @param {number} height - The height of the canvas.
+         * @param {number} margin - The margin from the canvas edges.
+         */
+        function drawAxesForMultiObject(ctx, width, height, margin) {
+            ctx.strokeStyle = '#aaa'; // A neutral gray color for axes
+            ctx.lineWidth = 1;
+
+            // X-axis (Position = 0 line)
+            // Calculate the canvas Y coordinate for position 0
+            const xAxisY_canvas = dataToCanvasY(0);
+            ctx.beginPath();
+            ctx.moveTo(margin, xAxisY_canvas);
+            ctx.lineTo(width - margin, xAxisY_canvas);
+            ctx.stroke();
+
+            // Y-axis (Time = 0 line)
+            const yAxisX_canvas = dataToCanvasX(0); // This should be 'margin'
+            ctx.beginPath();
+            ctx.moveTo(yAxisX_canvas, margin);
+            ctx.lineTo(yAxisX_canvas, height - margin);
+            ctx.stroke();
+
+            // X-axis label
+            ctx.fillStyle = "var(--label-color)";
+            ctx.font = "12px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.fillText("Time (s)", margin + (width - 2 * margin) / 2, xAxisY_canvas + 10);
+
+            // Y-axis label
+            ctx.save();
+            ctx.translate(yAxisX_canvas - 30, margin + (height - 2 * margin) / 2); // Adjust X position for rotated text
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+            ctx.fillText("Position (m)", 0, 0);
+            ctx.restore();
+        }
+
+        // NEW: Function to draw the Multi-Object 1D graph
+        function prepareAndDrawMultiObject1DGraph() {
+            const ctx = trajectoryCanvas.getContext("2d");
+            if (!ctx || globalPoints.length === 0) return;
+
+            ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+
+            // Draw the axes using the dedicated function
+            drawAxesForMultiObject(ctx, trajectoryCanvas.width, trajectoryCanvas.height, GRAPH_MARGIN);
+
+            // Draw each object's trajectory
+            globalPoints.forEach(obj => {
+                ctx.beginPath();
+                obj.trajectory.forEach((pt, i) => {
+                    const canvasX = dataToCanvasX(pt.t);
+                    const canvasY = dataToCanvasY(pt.x);
+
+                    if (i === 0) {
+                        ctx.moveTo(canvasX, canvasY);
+                    } else {
+                        ctx.lineTo(canvasX, canvasY);
+                    }
+                });
+                ctx.strokeStyle = obj.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw label for each object at its starting point
+                const startPt = obj.trajectory[0];
+                const startCanvasX = dataToCanvasX(startPt.t);
+                const startCanvasY = dataToCanvasY(startPt.x);
+                ctx.fillStyle = obj.color;
+                ctx.font = "12px Arial";
+                ctx.textAlign = "left";
+                ctx.textBaseline = "bottom";
+                ctx.fillText(obj.label, startCanvasX + 10, startCanvasY - 5);
+            });
+
+            // Draw meeting points
+            globalMeetingPoints.forEach(mp => {
+                const canvasX = dataToCanvasX(mp.t);
+                const canvasY = dataToCanvasY(mp.x);
+
+                ctx.beginPath();
+                ctx.arc(canvasX, canvasY, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = "red"; // Meeting points are red
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.fillStyle = "var(--marker-text-color)";
+                ctx.font = "11px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                ctx.fillText(`t=${mp.t.toFixed(2)}s, x=${mp.x.toFixed(2)}m`, canvasX, canvasY - 10);
+            });
+        }
+
+        // NEW: Draw current time marker and object positions for Multi-Object 1D
+        function drawMultiObject1DCurrentState(ctx, t_current) {
+            if (globalPoints.length === 0) return;
+
+            // Draw a vertical line for the current time
+            const lineX = dataToCanvasX(t_current);
+            ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]); // Dashed line
+            ctx.beginPath();
+            ctx.moveTo(lineX, GRAPH_MARGIN); // From top margin
+            ctx.lineTo(lineX, trajectoryCanvas.height - GRAPH_MARGIN); // To bottom margin
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset line dash
+
+            // Draw a circle for each object at its current position
+            globalPoints.forEach(obj => {
+                const x_current = obj.trajectory.find(pt => pt.t >= t_current - TOLERANCE)?.x || obj.trajectory[obj.trajectory.length - 1].x;
+                const canvasX = dataToCanvasX(t_current);
+                const canvasY = dataToCanvasY(x_current);
+
+                ctx.beginPath();
+                ctx.arc(canvasX, canvasY, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = obj.color; // Use object's color
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+        }
+
+
+        // --- Trajectory Data Generation and Drawing Setup ---
+        function prepareAndDrawTrajectory(Vix, Viy, t_flight, g, y_end) {
+            if (!trajectoryCanvas) return;
+            globalPoints = [];
+            global_t_flight = Math.max(0, t_flight);
+            // If the final displacement (y_end) is negative, shift the trajectory upward
+            let verticalShift = (y_end < 0) ? -y_end : 0;
+            // Save the vertical shift globally so the ball and peak label use it
+            globalVerticalShift = verticalShift;
+            const numPoints = 100;
+            const dt = (global_t_flight > TOLERANCE) ? global_t_flight / numPoints : 0;
+            for (let i = 0; i <= numPoints; i++) {
+                const t = i * dt;
+                const x = Vix * t;
+                // Apply vertical shift to ensure the landing point is drawn at y=0
+                const y = Viy * t - 0.5 * g * t * t + verticalShift;
+                globalPoints.push({ x, y, t });
+            }
+            if (globalPoints.length === 0 || Math.abs(globalPoints[globalPoints.length - 1].t - global_t_flight) > TOLERANCE) {
+                const x_final = Vix * global_t_flight;
+                const y_final = Viy * global_t_flight - 0.5 * g * global_t_flight * global_t_flight + verticalShift;
+                if (globalPoints.length > 0) {
+                    globalPoints[globalPoints.length - 1] = { x: x_final, y: y_final, t: global_t_flight };
+                } else {
+                    globalPoints.push({ x: x_final, y: y_final, t: global_t_flight });
+                }
+            }
+            if (globalPoints.length === 0) {
+                console.warn("No trajectory points generated.");
+                resetAnimation();
+                return;
+            }
+            const xs = globalPoints.map(p => p.x);
+            const ys = globalPoints.map(p => p.y);
+            const minX = Math.min(0, ...xs);
+            const maxX = Math.max(0, ...xs);
+            const minY = Math.min(0, ...ys);
+            const maxY = Math.max(0, ...ys);
+            const marginFactor = 0.15;
+            const canvasWidth = trajectoryCanvas.width;
+            const canvasHeight = trajectoryCanvas.height;
+            const availableWidth = canvasWidth * (1 - marginFactor * 2);
+            const availableHeight = canvasHeight * (1 - marginFactor * 2);
+            const rangeX = (maxX - minX);
+            const rangeY = (maxY - minY);
+            globalScale = Math.min(
+                (Math.abs(rangeX) < TOLERANCE) ? 1 : availableWidth / rangeX,
+                (Math.abs(rangeY) < TOLERANCE) ? 1 : availableHeight / rangeY
+            );
+            globalScale = Math.max(1e-6, globalScale);
+            globalScale = Math.min(1e6, globalScale);
+            const trajWidthScaled = rangeX * globalScale;
+            globalOffsetX = (canvasWidth - trajWidthScaled) / 2 - minX * globalScale;
+            // Set globalOffsetY so that the lowest point appears near the bottom margin
+            globalOffsetY = canvasHeight * (1 - marginFactor) + minY * globalScale;
+            resetAnimation();
+        }
+
+        // --- Canvas Drawing Functions ---
+        function drawStaticTrajectory() {
+            const ctx = trajectoryCanvas.getContext("2d");
+            if (!ctx || globalPoints.length === 0) return;
+            ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+            // Draw axes with a hardcoded neutral dark gray color
+            ctx.strokeStyle = "#555555";
+            ctx.lineWidth = 1;
+            const originY_canvas = globalOffsetY - (0 * globalScale);
+            ctx.beginPath();
+            ctx.moveTo(0, originY_canvas);
+            ctx.lineTo(trajectoryCanvas.width, originY_canvas);
+            ctx.stroke();
+            const originX_canvas = globalOffsetX + (0 * globalScale);
+            ctx.beginPath();
+            ctx.moveTo(originX_canvas, 0);
+            ctx.lineTo(originX_canvas, trajectoryCanvas.height);
+            ctx.stroke();
+            // Draw the trajectory path using a hardcoded blue color (#1e90ff)
+            ctx.beginPath();
+            globalPoints.forEach((pt, i) => {
+                const canvasX = globalOffsetX + pt.x * globalScale;
+                const canvasY = globalOffsetY - pt.y * globalScale;
+                if (i === 0) {
+                    ctx.moveTo(canvasX, canvasY);
+                } else {
+                    ctx.lineTo(canvasX, canvasY);
+                }
+            });
+            ctx.strokeStyle = "#1e90ff";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // Draw key markers
+            const startPoint = globalPoints[0];
+            const endPoint = globalPoints[globalPoints.length - 1];
+            let peakPoint = startPoint;
+            if (Math.abs(globalG) > TOLERANCE && globalViy > TOLERANCE) {
+                const t_peak = globalViy / globalG;
+                if (t_peak > 0 && t_peak <= global_t_flight + TOLERANCE) {
+                    peakPoint = {
+                        x: globalVix * t_peak,
+                        // Apply the vertical shift to the peak label calculation
+                        y: globalViy * t_peak - 0.5 * globalG * t_peak * t_peak + globalVerticalShift,
+                        t: t_peak
+                    };
+                } else {
+                    peakPoint = globalPoints.reduce((max, p) => p.y > max.y ? p : max, startPoint);
+                }
+            } else {
+                peakPoint = globalPoints.reduce((max, p) => p.y > max.y ? p : max, startPoint);
+            }
+            drawMarker(ctx, startPoint, "green", "Start");
+            if (peakPoint.y > Math.max(startPoint.y, endPoint.y) + (0.01 / globalScale)) {
+                drawMarker(ctx, peakPoint, "orange", "Peak");
+            }
+            drawMarker(ctx, endPoint, "red", "Landing");
+        }
+
+        function drawMarker(ctx, pt, color, label) {
+            if (!pt) return;
+            const cx = globalOffsetX + pt.x * globalScale;
+            const cy = globalOffsetY - pt.y * globalScale;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.5)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.fillStyle = "var(--marker-text-color)";
+            ctx.font = "11px Arial";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "bottom";
+            let labelX = cx + 8;
+            let labelY = cy - 5;
+            if (cx > trajectoryCanvas.width - 50) {
+                ctx.textAlign = "right";
+                labelX = cx - 8;
+            }
+            if (cy < 20) {
+                 labelY = cy + 15;
+            }
+            ctx.fillText(label, labelX, labelY);
+        }
+
+        function drawProjectile(ctx, t_current) {
+            if (!isFinite(globalVix) || !isFinite(globalViy) || !isFinite(globalG)) return;
+            const x_current = globalVix * t_current;
+            // Add the global vertical shift so the projectile follows the shifted trajectory
+            const y_current = globalViy * t_current - 0.5 * globalG * t_current * t_current + globalVerticalShift;
+            const ballX = globalOffsetX + x_current * globalScale;
+            const ballY = globalOffsetY - y_current * globalScale;
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, 6, 0, 2 * Math.PI);
+            ctx.fillStyle = "blue";
+            ctx.fill();
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // --- Animation & Slider Control ---
+        function updateAnimationFrame() {
+            const ctx = trajectoryCanvas.getContext("2d");
+            if (!ctx) return;
+
+            const mode = getSelectedMode();
+            const sliderValue = parseFloat(trajectorySlider.value);
+            let t_current = 0;
+
+            if (mode === "multiObject1D") {
+                if (globalMaxTime > TOLERANCE) {
+                    t_current = (sliderValue / 100) * globalMaxTime;
+                }
+                prepareAndDrawMultiObject1DGraph(); // Redraw static graph
+                drawMultiObject1DCurrentState(ctx, t_current); // Draw dynamic state
+                updateStateDisplayMultiObject(t_current);
+            } else { // Basic and Design modes (2D)
+                if (!isFinite(global_t_flight)) return;
+                if (global_t_flight > TOLERANCE) {
+                    t_current = (sliderValue / 100) * global_t_flight;
+                }
+                drawStaticTrajectory();
+                drawProjectile(ctx, t_current);
+                updateStateDisplay(t_current);
+            }
+        }
+
+        function startAutoAnimation() {
+            if (autoAnimating) return;
+            const mode = getSelectedMode();
+            let totalTime = (mode === "multiObject1D") ? globalMaxTime : global_t_flight;
+
+            if (!isFinite(totalTime) || totalTime <= 0) return;
+
+            autoAnimating = true;
+            animationStartTime = null;
+            startStopButton.textContent = "Stop";
+
+            function animateFrame(timestamp) {
+                if (!autoAnimating) return;
+                if (!animationStartTime) {
+                    animationStartTime = timestamp - (pausedProgress * ANIMATION_DURATION);
+                }
+                const elapsed = timestamp - animationStartTime;
+                let progress = Math.min(elapsed / ANIMATION_DURATION, 1);
+                trajectorySlider.value = progress * 100;
+                updateAnimationFrame();
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animateFrame);
+                } else {
+                    autoAnimating = false;
+                    startStopButton.textContent = "Start";
+                    pausedProgress = 0;
+                    trajectorySlider.value = 100;
+                    updateAnimationFrame();
+                }
+            }
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = requestAnimationFrame(animateFrame);
+        }
+
+        function toggleAnimation() {
+            if (autoAnimating) {
+                autoAnimating = false;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                pausedProgress = parseFloat(trajectorySlider.value) / 100;
+                startStopButton.textContent = "Start";
+            } else {
+                if (parseFloat(trajectorySlider.value) >= 99.9) {
+                     pausedProgress = 0;
+                     trajectorySlider.value = 0;
+                } else {
+                      pausedProgress = parseFloat(trajectorySlider.value) / 100;
+                }
+                startAutoAnimation();
+            }
+        }
+
+        function resetAnimation() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            autoAnimating = false;
+            pausedProgress = 0;
+            trajectorySlider.value = 0;
+            startStopButton.textContent = "Start";
+
+            const mode = getSelectedMode();
+            if (mode === "multiObject1D") {
+                if (globalPoints && globalPoints.length > 0) { // Check globalPoints for multi-object
+                    prepareAndDrawMultiObject1DGraph();
+                    updateStateDisplayMultiObject(0);
+                } else {
+                    const ctx = trajectoryCanvas.getContext("2d");
+                    if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+                    updateStateDisplayMultiObject(0);
+                }
+            } else { // 2D modes
+                if (globalPoints && globalPoints.length > 0) {
+                     updateAnimationFrame(); // This will call drawStaticTrajectory and drawProjectile(0)
+                } else {
+                     const ctx = trajectoryCanvas.getContext("2d");
+                     if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+                     updateStateDisplay(0);
+                }
+            }
+        }
+
+        function handleSliderInput() {
+            if (autoAnimating) {
+                autoAnimating = false;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                startStopButton.textContent = "Start";
+            }
+            updateAnimationFrame();
+        }
+
+        function handleSliderChange() {
+            pausedProgress = parseFloat(trajectorySlider.value) / 100;
+            updateAnimationFrame();
+        }
+
+        // NEW: Handle clicks on the canvas for meeting points
+        function handleCanvasClick(event) {
+            const mode = getSelectedMode();
+            if (mode !== "multiObject1D" || globalMeetingPoints.length === 0) {
+                return;
+            }
+
+            const rect = trajectoryCanvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            for (const mp of globalMeetingPoints) {
+                const canvasX = dataToCanvasX(mp.t);
+                const canvasY = dataToCanvasY(mp.x);
+
+                const distance = Math.sqrt(
+                    Math.pow(clickX - canvasX, 2) + Math.pow(clickY - canvasY, 2)
+                );
+
+                if (distance <= MEETING_POINT_CLICK_RADIUS) {
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                    autoAnimating = false;
+                    startStopButton.textContent = "Start";
+
+                    const newSliderValue = (mp.t / globalMaxTime) * 100;
+                    trajectorySlider.value = newSliderValue;
+                    pausedProgress = newSliderValue / 100;
+                    updateAnimationFrame();
+                    break;
+                }
+            }
+        }
+
+        // --- State Display Update (for 2D) ---
+        function updateStateDisplay(t) {
+            if (typeof globalVix !== 'number' || typeof globalViy !== 'number' || !isFinite(globalVix) || !isFinite(globalViy) || typeof globalG !== 'number' || !isFinite(globalG)) {
+                 stateDisplayValues.innerHTML = `
+                     <p><strong>Time:</strong> <span>-- s</span></p>
+                     <p><strong>&Delta;x:</strong> <span>-- m</span></p>
+                     <p><strong>&Delta;y:</strong> <span>-- m</span></p>
+                     <p><strong>V<sub>x</sub>:</strong> <span>-- m/s</span></p>
+                     <p><strong>V<sub>y</sub>:</strong> <span>-- m/s</span></p>
+                     <p><strong>Speed:</strong> <span>-- m/s</span></p>
+                     <p><strong>Angle:</strong> <span>-- °</span></p>
+                 `;
+                 return;
+            }
+            const display_t = Math.max(0, t);
+            const dx = globalVix * display_t;
+            const dy = globalViy * display_t - 0.5 * globalG * display_t * display_t;
+            const vx = globalVix;
+            const vy = globalViy - globalG * display_t;
+            const speed = Math.sqrt(vx * vx + vy * vy);
+            const angle = Math.atan2(vy, vx) * 180 / Math.PI;
+            stateDisplayValues.innerHTML = `
+                <p><strong>Time:</strong> <span>${display_t.toFixed(2)} s</span></p>
+                <p><strong>&Delta;x:</strong> <span>${dx.toFixed(2)} m</span></p>
+                <p><strong>&Delta;y:</strong> <span>${dy.toFixed(2)} m</span></p>
+                <p><strong>V<sub>x</sub>:</strong> <span>${vx.toFixed(2)} m/s</span></p>
+                <p><strong>V<sub>y</sub>:</strong> <span>${vy.toFixed(2)} m/s</span></p>
+                <p><strong>Speed:</strong> <span>${speed.toFixed(2)} m/s</span></p>
+                <p><strong>Angle:</strong> <span>${angle.toFixed(2)} °</span></p>
+            `;
+        }
+
+        // NEW: State Display Update for Multi-Object 1D
+        function updateStateDisplayMultiObject(t) {
+            let html = `<p><strong>Time:</strong> <span>${t.toFixed(2)} s</span></p>`;
+            if (multiObjectData.length === 0) {
+                html += `
+                    <p><strong>Position:</strong> <span>-- m</span></p>
+                    <p><strong>Velocity:</strong> <span>-- m/s</span></p>
+                `;
+            } else {
+                multiObjectData.forEach(obj => {
+                    const x_current = obj.x0 + obj.v0 * t + 0.5 * obj.a * t * t;
+                    const v_current = obj.v0 + obj.a * t;
+                    html += `
+                        <div class="group-title" style="margin-top: 1rem; color: ${obj.color};">${obj.label}</div>
+                        <p><strong>Position:</strong> <span>${x_current.toFixed(2)} m</span></p>
+                        <p><strong>Velocity:</strong> <span>${v_current.toFixed(2)} m/s</span></p>
+                    `;
+                });
+            }
+            stateDisplayValues.innerHTML = html;
+        }
+
+
+        // --- Main Calculation Dispatcher ---
+        function calculate() {
+            const mode = getSelectedMode();
+            try {
+                if (mode === "1d") {
+                     clearMessages();
+                     showNote("1D Mode: Fill in <strong>exactly three</strong> fields.");
+                    calculate1DMode();
+                } else if (mode === "multiObject1D") { // NEW
+                     clearMessages();
+                     showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
+                     calculateMultiObject1DMode();
+                } else {
+                    const accInput = getFloatValue("acceleration");
+                    const g = (isFinite(accInput) && accInput > 0) ? accInput : G_DEFAULT;
+                     if (!isFinite(accInput) || accInput <= 0) {
+                         document.getElementById("acceleration").value = G_DEFAULT;
+                     }
+                    if (mode === "basic") {
+                         clearMessages();
+                         showNote("2D Mode: Fill in <strong>exactly three</strong> of V<sub>i</sub>, &Delta;x, &Delta;y, &theta;.");
+                        calculateBasicMode(g);
+                    } else if (mode === "design") {
+                         clearMessages();
+                         showNote("Design Mode: Fill in target &Delta;x, &Delta;y, and landing angle &phi;.");
+                        calculateDesignMode(g);
+                    }
+                }
+            } catch (err) {
+                console.error("Unhandled Calculation Error:", err);
+                showError("Calculation Error: " + err.message);
+                resetAnimation();
+            }
+        }
+    </script>
 </body>
-<!-- Offline fallback page used by service worker navigation fallback. -->
 </html>
