@@ -134,6 +134,141 @@
       }
     }
 
+    /* Optimizer-specific layout: inputs top-left, sticky graph top-right, results bottom */
+    .wrapper.optimizer-mode {
+      display: grid;
+      grid-template-columns: 500px 600px;
+      grid-template-rows: auto auto;
+      gap: 1rem;
+      max-width: none;
+      min-height: 100vh;
+      align-items: start;
+      justify-content: center;
+    }
+
+    .wrapper.optimizer-mode .top-container {
+      grid-column: 1;
+      grid-row: 1;
+      display: block;
+      margin: 0;
+    }
+
+    .wrapper.optimizer-mode #trajectoryPanel {
+      grid-column: 2;
+      grid-row: 1;
+      position: sticky;
+      top: 1rem;
+      height: fit-content;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+      margin: 0;
+      align-self: start;
+    }
+
+    .wrapper.optimizer-mode #optimizerResultContainer {
+      grid-column: 1;
+      grid-row: 2;
+      margin-top: 2rem;
+    }
+
+    .wrapper.optimizer-mode #resultContainer {
+      display: none;
+    }
+
+    .wrapper.optimizer-mode #stateDisplayContainer {
+      display: none;
+    }
+
+    /* Collapsible display options in top-right corner of canvas */
+    .wrapper.optimizer-mode #optimizerDisplayOptions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--container-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px var(--shadow-color);
+      z-index: 10;
+      min-width: 200px;
+    }
+
+    .wrapper.optimizer-mode #trajectoryContainer {
+      position: relative;
+    }
+
+    .display-options-header {
+      padding: 8px 12px;
+      background: var(--header-bg, #f5f5f5);
+      border-bottom: 1px solid var(--border-color);
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 500;
+      font-size: 0.9em;
+      user-select: none;
+    }
+
+    .display-options-content {
+      padding: 12px;
+      display: none;
+    }
+
+    .display-options-content.expanded {
+      display: block;
+    }
+
+    .display-options-toggle {
+      transition: transform 0.2s ease;
+      font-size: 0.8em;
+    }
+
+    .display-options-toggle.expanded {
+      transform: rotate(180deg);
+    }
+
+    .wrapper.optimizer-mode #optimizerDisplayOptions .form-group {
+      margin-bottom: 8px;
+    }
+
+    .wrapper.optimizer-mode #optimizerDisplayOptions .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .wrapper.optimizer-mode #optimizerDisplayOptions label {
+      font-size: 0.85em;
+      margin: 0;
+    }
+
+    @media (max-width: 1200px) {
+      .wrapper.optimizer-mode {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+      }
+      
+      .wrapper.optimizer-mode .top-container {
+        grid-column: 1;
+        grid-row: 1;
+      }
+      
+      .wrapper.optimizer-mode #trajectoryPanel {
+        grid-column: 1;
+        grid-row: 2;
+        position: relative;
+        top: auto;
+        height: auto;
+        max-height: none;
+        overflow-y: visible;
+      }
+      
+      .wrapper.optimizer-mode #optimizerResultContainer {
+        grid-column: 1;
+        grid-row: 3;
+        margin-top: 1rem;
+      }
+    }
+
     .container {
       background-color: var(--container-bg);
       border-radius: var(--border-radius);
@@ -373,7 +508,7 @@
       width: 100%;
 	  max-width: 800px;
       height: auto;
-      aspect-ratio: 800 / 300;
+      aspect-ratio: 800 / 400;
     }
 
     #stateDisplay {
@@ -527,11 +662,93 @@
         }
     }
 
+    /* Optimizer-specific styles */
+    .object-input-section label[style*="float: right"] {
+        color: var(--label-color);
+        font-size: 0.85em;
+        font-weight: normal;
+    }
+
+    .object-input-section input[type="checkbox"] {
+        accent-color: var(--primary-color);
+        transform: scale(1.1);
+    }
+
+    .object-input-section h3 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-group label input[type="checkbox"] {
+        accent-color: var(--primary-color);
+        transform: scale(1.1);
+        margin-right: 8px;
+    }
+
+    /* Slider group styling */
+    .slider-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.3rem;
+    }
+
+    .slider-group label {
+        flex: none;
+        margin-bottom: 0.2rem;
+    }
+
+    .slider-control-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .slider-group input[type="range"] {
+        flex: 1;
+        margin: 0;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--border-color);
+        outline: none;
+    }
+
+    .slider-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        border: 2px solid var(--container-bg);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+    }
+
+    .slider-group input[type="range"]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border: none;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .slider-group input[type="number"] {
+        flex: none;
+        width: 80px;
+        margin: 0;
+    }
+
   </style>
 </head>
 <body>
   <div class="wrapper">
-    <div class="top-container">
+    <div class="top-container" id="mainContainer">
       <div class="container" id="inputContainer">
         <div class="header">
           <h1>Kinematics Calculator</h1>
@@ -544,6 +761,8 @@
             <label for="modeDesign">Design</label>
             <input type="radio" name="mode" id="modeMultiObject1D" value="multiObject1D" />
             <label for="modeMultiObject1D">Multi-Object 1D</label>
+            <input type="radio" name="mode" id="modeOptimizer" value="optimizer" />
+            <label for="modeOptimizer">Optimizer</label>
           </div>
         </div>
         <div id="oneDInputs">
@@ -668,11 +887,81 @@
         </div>
         <!-- END NEW: Multi-Object 1D Inputs -->
 
+        <!-- NEW: Optimizer Inputs -->
+        <div id="optimizerInputs" class="hidden">
+            <p class="note">Compare two projectile trajectories. Use optimization to find maximum range angles. Visualize trajectory envelopes.</p>
+
+            <div class="object-input-section">
+                <h3>Trajectory A <label style="float: right; font-size: 0.85em; font-weight: normal;"><input type="checkbox" id="showTrajectoryA" checked style="margin-right: 4px;">Show</label></h3>
+                
+                <div class="form-group slider-group">
+                    <label for="angleA">Launch Angle, θ<sub>A</sub> <span class="unit">(°)</span></label>
+                    <div class="slider-control-row">
+                        <input type="range" id="angleASlider" min="0.1" max="89.9" step="0.1" value="45" />
+                        <input type="number" id="angleA" value="45" min="0.1" max="89.9" step="0.1" />
+                    </div>
+                </div>
+                
+                <div class="form-group slider-group">
+                    <label for="speedA">Initial Speed, V<sub>A</sub> <span class="unit">(m/s)</span></label>
+                    <div class="slider-control-row">
+                        <input type="range" id="speedASlider" min="1" max="100" step="0.1" value="30" />
+                        <input type="number" id="speedA" value="30" min="0.1" step="0.1" />
+                    </div>
+                </div>
+                
+                <div class="form-group slider-group">
+                    <label for="heightA">Launch Height, h<sub>A</sub> <span class="unit">(m)</span></label>
+                    <div class="slider-control-row">
+                        <input type="range" id="heightASlider" min="0" max="50" step="0.1" value="10" />
+                        <input type="number" id="heightA" value="10" min="0" step="0.1" />
+                    </div>
+                </div>
+                
+                <button id="optimizeA" class="add-object-button" style="background-color: #1e90ff; border-color: #1e90ff;">★ Optimize A for Max Range</button>
+            </div>
+
+            <div class="object-input-section">
+                <h3>Trajectory B <label style="float: right; font-size: 0.85em; font-weight: normal;"><input type="checkbox" id="showTrajectoryB" checked style="margin-right: 4px;">Show</label></h3>
+                
+                <div class="form-group slider-group">
+                    <label for="angleB">Launch Angle, θ<sub>B</sub> <span class="unit">(°)</span></label>
+                    <div class="slider-control-row">
+                        <input type="range" id="angleBSlider" min="0.1" max="89.9" step="0.1" value="35" />
+                        <input type="number" id="angleB" value="35" min="0.1" max="89.9" step="0.1" />
+                    </div>
+                </div>
+                
+                <div class="form-group slider-group">
+                    <label for="speedB">Initial Speed, V<sub>B</sub> <span class="unit">(m/s)</span></label>
+                    <div class="slider-control-row">
+                        <input type="range" id="speedBSlider" min="1" max="100" step="0.1" value="30" />
+                        <input type="number" id="speedB" value="30" min="0.1" step="0.1" />
+                    </div>
+                </div>
+                
+                <div class="form-group slider-group">
+                    <label for="heightB">Launch Height, h<sub>B</sub> <span class="unit">(m)</span></label>
+                    <div class="slider-control-row">
+                        <input type="range" id="heightBSlider" min="0" max="50" step="0.1" value="10" />
+                        <input type="number" id="heightB" value="10" min="0" step="0.1" />
+                    </div>
+                </div>
+                
+                <button id="optimizeB" class="add-object-button" style="background-color: #ff4500; border-color: #ff4500;">★ Optimize B for Max Range</button>
+            </div>
+
+            <button class="clear-button" id="clearOptimizer">Clear All</button>
+        </div>
+        <!-- END NEW: Optimizer Inputs -->
+
         <div id="gravityBox" class="form-group hidden" style="margin-top: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
           <label for="acceleration">Gravitational Accel., g <span class="unit">(m/s²)</span></label>
           <input type="number" id="acceleration" value="9.81" />
         </div>
       </div>
+      
+      <!-- Results Container - Right side for non-optimizer modes -->
       <div class="container" id="resultContainer">
         <h2>Results</h2>
         <div id="message">
@@ -680,37 +969,75 @@
         </div>
       </div>
     </div>
+    
+    <!-- Results Container for Optimizer Mode - Bottom -->
+    <div class="container hidden" id="optimizerResultContainer">
+      <h2>Results</h2>
+      <div id="optimizerMessage">
+        <p class="note">Enter parameters in the optimizer section to see results.</p>
+      </div>
+    </div>
+    
+    <!-- Trajectory Panel for all modes -->
     <div class="container hidden" id="trajectoryPanel">
-  <h2 id="graphTitle">Trajectory Visualization</h2> <!-- Added ID for dynamic title -->
-  <div id="trajectoryPanelInner">
-    <!-- Container for canvas, slider, and buttons -->
-    <div id="trajectoryContainer">
-      <canvas id="trajectoryCanvas" width="800" height="300"></canvas>
-      <div id="trajectoryControls">
-        <input type="range" id="trajectorySlider" min="0" max="100" value="0" step="0.1" />
-        <div class="buttonContainer">
-          <button id="startStopButton">Start</button>
-          <button id="resetButton">Reset</button>
+      <h2 id="trajectoryTitle">Trajectory Visualization</h2>
+      <div id="trajectoryPanelInner">
+        <!-- Container for canvas, slider, and buttons -->
+        <div id="trajectoryContainer">
+          <canvas id="trajectoryCanvas" width="800" height="400"></canvas>
+          <div id="trajectoryControls">
+            <input type="range" id="trajectorySlider" min="0" max="100" value="0" step="0.1" />
+            <div class="buttonContainer">
+              <button id="startStopButton">Start</button>
+              <button id="resetButton">Reset</button>
+            </div>
+          </div>
+        </div>
+        <!-- Separate container for the current state display -->
+        <div id="stateDisplayContainer">
+          <div id="stateDisplay">
+            <h3>Current State</h3>
+            <div id="stateValues">
+              <p><strong>Time:</strong> <span>-- s</span></p>
+              <p><strong>dx:</strong> <span>-- m</span></p>
+              <p><strong>dy:</strong> <span>-- m</span></p>
+              <p><strong>vx:</strong> <span>-- m/s</span></p>
+              <p><strong>vy:</strong> <span>-- m/s</span></p>
+              <p><strong>Speed:</strong> <span>-- m/s</span></p>
+              <p><strong>Angle:</strong> <span>-- °</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Optimizer Display Options (only visible in optimizer mode) -->
+      <div id="optimizerDisplayOptions" class="hidden">
+        <div class="display-options-header" onclick="toggleDisplayOptions()">
+          <span>Display Options</span>
+          <span class="display-options-toggle">▼</span>
+        </div>
+        <div class="display-options-content" id="displayOptionsContent">
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="showEnvelopeA" checked style="margin-right: 8px;">
+              Show Trajectory A Envelope
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="showEnvelopeB" checked style="margin-right: 8px;">
+              Show Trajectory B Envelope
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="showOptimalPaths" checked style="margin-right: 8px;">
+              Show Optimal Range Paths
+            </label>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Separate container for the current state display -->
-    <div id="stateDisplayContainer">
-      <div id="stateDisplay">
-        <h3>Current State</h3>
-        <div id="stateValues">
-          <p><strong>Time:</strong> <span>-- s</span></p>
-          <p><strong>dx:</strong> <span>-- m</span></p>
-          <p><strong>dy:</strong> <span>-- m</span></p>
-          <p><strong>vx:</strong> <span>-- m/s</span></p>
-          <p><strong>vy:</strong> <span>-- m/s</span></p>
-          <p><strong>Speed:</strong> <span>-- m/s</span></p>
-          <p><strong>Angle:</strong> <span>-- °</span></p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
         <script>
             // PWA: Service worker registration
@@ -750,6 +1077,25 @@
       let globalMaxPosition = 0; // Max position for 1D multi-object graph
       let globalMeetingPoints = []; // Stores {t, x, objects} for meeting points in 1D multi-object
 
+      // NEW: Optimizer specific globals
+      const optimizerColors = {
+        trajectoryA: "#1e90ff",     // Blue for trajectory A
+        trajectoryB: "#ff4500",     // Orange for trajectory B
+        optimalA: "#32cd32",        // Green for optimal A
+        optimalB: "#9370db",        // Purple for optimal B
+        envelopeA: "#1e90ff",       // Blue envelope (matches A)
+        envelopeB: "#ff4500"        // Orange envelope (matches B)
+      };
+      let optimizerAnimationData = {
+        running: false,
+        time: 0,
+        lastTimestamp: 0,
+        trajectoryA: null,
+        trajectoryB: null,
+        optimalA: null,
+        optimalB: null
+      };
+
       // Animation control
       let animationFrameId = null;
       let autoAnimating = false;
@@ -762,10 +1108,10 @@
       const basicInputsDiv = document.getElementById("basicInputs");
       const designInputsDiv = document.getElementById("designInputs");
       const multiObject1DInputsDiv = document.getElementById("multiObject1DInputs"); // NEW
+      const optimizerInputsDiv = document.getElementById("optimizerInputs"); // NEW
       const object3InputsDiv = document.getElementById("object3Inputs"); // NEW
       const addObject3Button = document.getElementById("addObject3Button"); // NEW
       const gravityBox = document.getElementById("gravityBox");
-      const messageDiv = document.getElementById("message");
       const startStopButton = document.getElementById("startStopButton");
       const resetButton = document.getElementById("resetButton");
       const trajectorySlider = document.getElementById("trajectorySlider");
@@ -774,7 +1120,9 @@
       const trajectoryPanel = document.getElementById("trajectoryPanel");
       const trajectoryCanvas = document.getElementById("trajectoryCanvas");
       const resultContainer = document.getElementById("resultContainer");
-      const graphTitle = document.getElementById("graphTitle"); // NEW: Get graph title element
+      const optimizerResultContainer = document.getElementById("optimizerResultContainer");
+      const messageDiv = document.getElementById("message");
+      const optimizerMessageDiv = document.getElementById("optimizerMessage");
 
       // --- Helper functions for converting data coordinates to canvas coordinates (Multi-Object 1D) ---
       /**
@@ -818,11 +1166,83 @@
           const clearBasicButton = document.getElementById("clearBasic");
           const clearDesignButton = document.getElementById("clearDesign");
           const clearMultiObjectButton = document.getElementById("clearMultiObject");
+          const clearOptimizerButton = document.getElementById("clearOptimizer");
           
           if (clear1DButton) clear1DButton.addEventListener("click", clear1DInputs);
           if (clearBasicButton) clearBasicButton.addEventListener("click", clearBasicInputs);
           if (clearDesignButton) clearDesignButton.addEventListener("click", clearDesignInputs);
           if (clearMultiObjectButton) clearMultiObjectButton.addEventListener("click", clearMultiObjectInputs);
+          if (clearOptimizerButton) clearOptimizerButton.addEventListener("click", clearOptimizerInputs);
+          
+          // NEW: Optimizer button event listeners
+          const optimizeAButton = document.getElementById("optimizeA");
+          const optimizeBButton = document.getElementById("optimizeB");
+          
+          if (optimizeAButton) optimizeAButton.addEventListener("click", optimizeTrajectoryA);
+          if (optimizeBButton) optimizeBButton.addEventListener("click", optimizeTrajectoryB);
+          
+          // NEW: Optimizer checkbox event listeners
+          const showTrajectoryACheckbox = document.getElementById("showTrajectoryA");
+          const showTrajectoryBCheckbox = document.getElementById("showTrajectoryB");
+          const showEnvelopeACheckbox = document.getElementById("showEnvelopeA");
+          const showEnvelopeBCheckbox = document.getElementById("showEnvelopeB");
+          const showOptimalPathsCheckbox = document.getElementById("showOptimalPaths");
+          
+          if (showTrajectoryACheckbox) showTrajectoryACheckbox.addEventListener("change", handleOptimizerDisplayChange);
+          if (showTrajectoryBCheckbox) showTrajectoryBCheckbox.addEventListener("change", handleOptimizerDisplayChange);
+          if (showEnvelopeACheckbox) showEnvelopeACheckbox.addEventListener("change", handleOptimizerDisplayChange);
+          if (showEnvelopeBCheckbox) showEnvelopeBCheckbox.addEventListener("change", handleOptimizerDisplayChange);
+          if (showOptimalPathsCheckbox) showOptimalPathsCheckbox.addEventListener("change", handleOptimizerDisplayChange);
+          
+          // NEW: Slider synchronization for optimizer mode
+          function syncInputAndSlider(inputId, sliderId) {
+              const input = document.getElementById(inputId);
+              const slider = document.getElementById(sliderId);
+              
+              if (input && slider) {
+                  // When input changes, update slider and recalculate immediately
+                  input.addEventListener('input', function(e) {
+                      const value = parseFloat(this.value) || 0;
+                      slider.value = value;
+                      const mode = getSelectedMode();
+                      if (mode === 'optimizer') {
+                          // Prevent the debounced calculation and calculate immediately
+                          e.stopPropagation();
+                          calculateOptimizerMode();
+                      }
+                  });
+                  
+                  // When slider changes, update input and recalculate immediately  
+                  slider.addEventListener('input', function() {
+                      input.value = this.value;
+                      const mode = getSelectedMode();
+                      if (mode === 'optimizer') {
+                          calculateOptimizerMode(); // Immediate update while dragging
+                      }
+                  });
+              }
+          }
+
+          // Set up all slider synchronizations
+          syncInputAndSlider('angleA', 'angleASlider');
+          syncInputAndSlider('speedA', 'speedASlider');
+          syncInputAndSlider('heightA', 'heightASlider');
+          syncInputAndSlider('angleB', 'angleBSlider');
+          syncInputAndSlider('speedB', 'speedBSlider');
+          syncInputAndSlider('heightB', 'heightBSlider');
+          
+          // Initialize slider values to match inputs on page load
+          function initializeSliderValues() {
+              ['angleA', 'speedA', 'heightA', 'angleB', 'speedB', 'heightB'].forEach(inputId => {
+                  const input = document.getElementById(inputId);
+                  const slider = document.getElementById(inputId.replace(/[AB]$/, '$&Slider'));
+                  if (input && slider && input.value) {
+                      slider.value = input.value;
+                  }
+              });
+          }
+          
+          initializeSliderValues();
           
           // NEW: Add click listener to canvas for meeting points
           if (trajectoryCanvas) trajectoryCanvas.addEventListener("click", handleCanvasClick);
@@ -857,29 +1277,54 @@
 
       function updateModeVisibility() {
           const mode = getSelectedMode();
+          const optimizerDisplayOptions = document.getElementById("optimizerDisplayOptions");
+          const trajectoryTitle = document.getElementById("trajectoryTitle");
+          const wrapper = document.querySelector('.wrapper');
+          
           oneDInputsDiv.classList.toggle("hidden", mode !== "1d");
           basicInputsDiv.classList.toggle("hidden", mode !== "basic");
           designInputsDiv.classList.toggle("hidden", mode !== "design");
-          multiObject1DInputsDiv.classList.toggle("hidden", mode !== "multiObject1D"); // NEW
-          gravityBox.classList.toggle("hidden", mode === "1d" || mode === "multiObject1D"); // Gravity not needed for 1D modes
-          trajectoryPanel.classList.toggle("hidden", mode === "1d"); // Hide trajectory panel for single 1D mode
+          multiObject1DInputsDiv.classList.toggle("hidden", mode !== "multiObject1D");
+          optimizerInputsDiv.classList.toggle("hidden", mode !== "optimizer");
+          gravityBox.classList.toggle("hidden", mode === "1d" || mode === "multiObject1D");
+          
+          // Apply optimizer-specific layout and result containers
+          if (mode === "optimizer") {
+              wrapper.classList.add("optimizer-mode");
+              resultContainer.classList.add("hidden");
+              optimizerResultContainer.classList.remove("hidden");
+          } else {
+              wrapper.classList.remove("optimizer-mode");
+              resultContainer.classList.remove("hidden");
+              optimizerResultContainer.classList.add("hidden");
+          }
+          
+          // Show/hide trajectory panel based on mode
+          trajectoryPanel.classList.toggle("hidden", mode === "1d");
+          
+          // Show optimizer display options only in optimizer mode
+          if (optimizerDisplayOptions) {
+              optimizerDisplayOptions.classList.toggle("hidden", mode !== "optimizer");
+          }
 
           // Manage Object 3 visibility
           if (mode === "multiObject1D") {
               object3InputsDiv.classList.toggle("hidden", !showObject3);
               addObject3Button.textContent = showObject3 ? "Remove Object 3" : "Add Object 3";
           } else {
-              object3InputsDiv.classList.add("hidden"); // Always hide in other modes
-              addObject3Button.textContent = "Add Object 3"; // Reset button text
-              showObject3 = false; // Reset state
+              object3InputsDiv.classList.add("hidden");
+              addObject3Button.textContent = "Add Object 3";
+              showObject3 = false;
           }
 
-          // Update graph title based on mode
-          if (graphTitle) {
+          // Update trajectory title based on mode
+          if (trajectoryTitle) {
               if (mode === "multiObject1D") {
-                  graphTitle.textContent = "Position-Time Graph (1D)";
+                  trajectoryTitle.textContent = "Position-Time Graph (1D)";
+              } else if (mode === "optimizer") {
+                  trajectoryTitle.textContent = "Projectile Optimizer (2D)";
               } else {
-                  graphTitle.textContent = "Trajectory Visualization (2D)";
+                  trajectoryTitle.textContent = "Trajectory Visualization (2D)";
               }
           }
 
@@ -890,10 +1335,12 @@
                showNote("2D Mode: Fill in <strong>exactly three</strong> of V<sub>i</sub>, &Delta;x, &Delta;y, &theta;.");
           } else if (mode === 'design') {
                showNote("Design Mode: Fill in target &Delta;x, &Delta;y, and landing angle &phi;.");
-          } else if (mode === 'multiObject1D') { // NEW
+          } else if (mode === 'multiObject1D') {
                showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
+          } else if (mode === 'optimizer') {
+               showNote("Optimizer Mode: Compare two projectile trajectories. Use sliders for real-time visualization. Optimize for maximum range angles.");
           }
-          resetAnimation(); // Reset animation on mode change
+          resetAnimation();
       }
 
       // NEW: Toggle Object 3 inputs
@@ -905,31 +1352,60 @@
 
       // --- Message Display Functions ---
       function clearMessages() {
-          messageDiv.innerHTML = "";
+          const mode = getSelectedMode();
+          if (mode === "optimizer") {
+              optimizerMessageDiv.innerHTML = "";
+          } else {
+              messageDiv.innerHTML = "";
+          }
       }
 
       function showResult(htmlContent) {
+           const mode = getSelectedMode();
            clearMessages();
-           if (!resultContainer.querySelector('h2')) {
-               resultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+           if (mode === "optimizer") {
+               if (!optimizerResultContainer.querySelector('h2')) {
+                   optimizerResultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+               }
+               optimizerMessageDiv.innerHTML = `<div class="result">${htmlContent}</div>`;
+           } else {
+               if (!resultContainer.querySelector('h2')) {
+                   resultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+               }
+               messageDiv.innerHTML = `<div class="result">${htmlContent}</div>`;
            }
-           messageDiv.innerHTML = `<div class="result">${htmlContent}</div>`;
       }
 
       function showError(text) {
+           const mode = getSelectedMode();
            clearMessages();
-           if (!resultContainer.querySelector('h2')) {
-               resultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+           if (mode === "optimizer") {
+               if (!optimizerResultContainer.querySelector('h2')) {
+                   optimizerResultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+               }
+               optimizerMessageDiv.innerHTML = `<div class="error">${text}</div>`;
+           } else {
+               if (!resultContainer.querySelector('h2')) {
+                   resultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+               }
+               messageDiv.innerHTML = `<div class="error">${text}</div>`;
            }
-           messageDiv.innerHTML = `<div class="error">${text}</div>`;
       }
 
       function showNote(text) {
+           const mode = getSelectedMode();
            clearMessages();
-           if (!resultContainer.querySelector('h2')) {
-               resultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+           if (mode === "optimizer") {
+               if (!optimizerResultContainer.querySelector('h2')) {
+                   optimizerResultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+               }
+               optimizerMessageDiv.innerHTML = `<div class="note">${text}</div>`;
+           } else {
+               if (!resultContainer.querySelector('h2')) {
+                   resultContainer.insertAdjacentHTML('afterbegin', '<h2>Results</h2>');
+               }
+               messageDiv.innerHTML = `<div class="note">${text}</div>`;
            }
-           messageDiv.innerHTML = `<div class="note">${text}</div>`;
       }
 
       // --- Input Parsing ---
@@ -1007,6 +1483,93 @@
           clearMessages();
           resetAnimation();
           showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
+      }
+
+      function clearOptimizerInputs() {
+          // Reset input values to defaults
+          document.getElementById("angleA").value = "45";
+          document.getElementById("speedA").value = "30";
+          document.getElementById("heightA").value = "10";
+          document.getElementById("angleB").value = "35";
+          document.getElementById("speedB").value = "30";
+          document.getElementById("heightB").value = "10";
+          
+          // Sync sliders with input values
+          document.getElementById("angleASlider").value = "45";
+          document.getElementById("speedASlider").value = "30";
+          document.getElementById("heightASlider").value = "10";
+          document.getElementById("angleBSlider").value = "35";
+          document.getElementById("speedBSlider").value = "30";
+          document.getElementById("heightBSlider").value = "10";
+          
+          // Reset checkboxes to default
+          document.getElementById("showTrajectoryA").checked = true;
+          document.getElementById("showTrajectoryB").checked = true;
+          document.getElementById("showEnvelopeA").checked = true;
+          document.getElementById("showEnvelopeB").checked = true;
+          document.getElementById("showOptimalPaths").checked = true;
+          
+          clearMessages();
+          resetAnimation();
+          calculate(); // Recalculate with default values
+          showNote("Optimizer Mode: Compare two projectile trajectories. Use optimization to find maximum range angles. Visualize trajectory envelopes.");
+      }
+
+      function optimizeTrajectoryA() {
+          const speedA = getFloatValue("speedA");
+          const heightA = getFloatValue("heightA");
+          const g = getFloatValue("acceleration", false) || G_DEFAULT;
+          
+          if (isNaN(speedA) || isNaN(heightA) || speedA <= 0) {
+              showError("Please enter valid positive values for Speed A and Height A.");
+              return;
+          }
+          
+          try {
+              const optimal = optimizeAngle(speedA, g, heightA);
+              const optimalAngleDeg = toDegrees(optimal.theta);
+              document.getElementById("angleA").value = optimalAngleDeg.toFixed(1);
+              calculate(); // Recalculate with new angle
+          } catch (e) {
+              showError("Error optimizing trajectory A: " + e.message);
+          }
+      }
+
+      function optimizeTrajectoryB() {
+          const speedB = getFloatValue("speedB");
+          const heightB = getFloatValue("heightB");
+          const g = getFloatValue("acceleration", false) || G_DEFAULT;
+          
+          if (isNaN(speedB) || isNaN(heightB) || speedB <= 0) {
+              showError("Please enter valid positive values for Speed B and Height B.");
+              return;
+          }
+          
+          try {
+              const optimal = optimizeAngle(speedB, g, heightB);
+              const optimalAngleDeg = toDegrees(optimal.theta);
+              document.getElementById("angleB").value = optimalAngleDeg.toFixed(1);
+              calculate(); // Recalculate with new angle
+          } catch (e) {
+              showError("Error optimizing trajectory B: " + e.message);
+          }
+      }
+
+      function handleOptimizerDisplayChange() {
+          const mode = getSelectedMode();
+          if (mode === "optimizer") {
+              drawOptimizerVisualization(); // Redraw with new display settings
+          }
+      }
+
+      function toggleDisplayOptions() {
+          const content = document.getElementById('displayOptionsContent');
+          const toggle = document.querySelector('.display-options-toggle');
+          
+          if (content && toggle) {
+              content.classList.toggle('expanded');
+              toggle.classList.toggle('expanded');
+          }
       }
 
       // --- 1D Kinematics Calculation (MODIFIED) ---
@@ -1733,6 +2296,172 @@
             resetAnimation(); // Reset animation to start
         }
 
+        // --- Optimizer Mathematical Functions ---
+        function toRadians(degrees) {
+            return degrees * Math.PI / 180;
+        }
+
+        function toDegrees(radians) {
+            return radians * 180 / Math.PI;
+        }
+
+        function optimizerTimeOfFlight(v, theta, g, h) {
+            const vy = v * Math.sin(theta);
+            const discriminant = vy * vy + 2 * g * h;
+            if (discriminant < 0) return 0;
+            return (vy + Math.sqrt(discriminant)) / g;
+        }
+
+        function optimizerRange(v, theta, g, h) {
+            const vx = v * Math.cos(theta);
+            return vx * optimizerTimeOfFlight(v, theta, g, h);
+        }
+
+        function optimizerApexHeight(v, theta, g, h) {
+            const vy = v * Math.sin(theta);
+            return h + (vy * vy) / (2 * g);
+        }
+
+        function optimizeAngle(v, g, h) {
+            // Golden section search for optimal angle
+            let a = 0.0001;
+            let b = Math.PI / 2 - 0.0001;
+            const phi = (Math.sqrt(5) - 1) / 2;
+            
+            let c = b - phi * (b - a);
+            let d = a + phi * (b - a);
+            let fc = optimizerRange(v, c, g, h);
+            let fd = optimizerRange(v, d, g, h);
+            
+            for (let i = 0; i < 80; i++) {
+                if (fc < fd) {
+                    a = c;
+                    c = d;
+                    fc = fd;
+                    d = a + phi * (b - a);
+                    fd = optimizerRange(v, d, g, h);
+                } else {
+                    b = d;
+                    d = c;
+                    fd = fc;
+                    c = b - phi * (b - a);
+                    fc = optimizerRange(v, c, g, h);
+                }
+                if (b - a < 1e-9) break;
+            }
+            
+            const theta = (a + b) / 2;
+            return {
+                theta: theta,
+                bestRange: optimizerRange(v, theta, g, h)
+            };
+        }
+
+        // NEW: Optimizer Mode Calculation
+        function calculateOptimizerMode() {
+            const g = getFloatValue("acceleration", false) || G_DEFAULT;
+            
+            // Get trajectory A parameters
+            const angleA = getFloatValue("angleA");
+            const speedA = getFloatValue("speedA");
+            const heightA = getFloatValue("heightA");
+            
+            // Get trajectory B parameters
+            const angleB = getFloatValue("angleB");
+            const speedB = getFloatValue("speedB");
+            const heightB = getFloatValue("heightB");
+            
+            // Validate inputs
+            if (isNaN(angleA) || isNaN(speedA) || isNaN(heightA) || 
+                isNaN(angleB) || isNaN(speedB) || isNaN(heightB)) {
+                showNote("Optimizer Mode: Please fill in all trajectory parameters.");
+                resetAnimation();
+                return;
+            }
+            
+            if (speedA <= 0 || speedB <= 0) {
+                showError("Initial speeds must be positive.");
+                resetAnimation();
+                return;
+            }
+            
+            if (angleA < 0.1 || angleA > 89.9 || angleB < 0.1 || angleB > 89.9) {
+                showError("Launch angles must be between 0.1° and 89.9°.");
+                resetAnimation();
+                return;
+            }
+            
+            try {
+                // Calculate trajectories
+                const thetaA = toRadians(angleA);
+                const thetaB = toRadians(angleB);
+                
+                const rangeA = optimizerRange(speedA, thetaA, g, heightA);
+                const rangeB = optimizerRange(speedB, thetaB, g, heightB);
+                const timeA = optimizerTimeOfFlight(speedA, thetaA, g, heightA);
+                const timeB = optimizerTimeOfFlight(speedB, thetaB, g, heightB);
+                const heightMaxA = optimizerApexHeight(speedA, thetaA, g, heightA);
+                const heightMaxB = optimizerApexHeight(speedB, thetaB, g, heightB);
+                
+                // Calculate optimal angles
+                const optimalA = optimizeAngle(speedA, g, heightA);
+                const optimalB = optimizeAngle(speedB, g, heightB);
+                
+                // Calculate flight times for optimal trajectories
+                const optimalTimeA = optimizerTimeOfFlight(speedA, optimalA.theta, g, heightA);
+                const optimalTimeB = optimizerTimeOfFlight(speedB, optimalB.theta, g, heightB);
+                
+                // Store animation data
+                optimizerAnimationData.trajectoryA = {
+                    v: speedA, theta: thetaA, g: g, h: heightA,
+                    range: rangeA, time: timeA, heightMax: heightMaxA
+                };
+                optimizerAnimationData.trajectoryB = {
+                    v: speedB, theta: thetaB, g: g, h: heightB,
+                    range: rangeB, time: timeB, heightMax: heightMaxB
+                };
+                optimizerAnimationData.optimalA = {
+                    v: speedA, theta: optimalA.theta, g: g, h: heightA,
+                    range: optimalA.bestRange, time: optimalTimeA
+                };
+                optimizerAnimationData.optimalB = {
+                    v: speedB, theta: optimalB.theta, g: g, h: heightB,
+                    range: optimalB.bestRange, time: optimalTimeB
+                };
+                
+                // Generate results
+                let resultHTML = `<div class="group-title">Optimizer Results</div>`;
+                
+                resultHTML += `<div class="group-title">Trajectory A</div>`;
+                resultHTML += formatResultLine("Launch Angle, θ<sub>A</sub>", angleA, "°");
+                resultHTML += formatResultLine("Range", rangeA, "m");
+                resultHTML += formatResultLine("Time of Flight", timeA, "s");
+                resultHTML += formatResultLine("Max Height", heightMaxA, "m");
+                
+                resultHTML += `<div class="group-title">Trajectory B</div>`;
+                resultHTML += formatResultLine("Launch Angle, θ<sub>B</sub>", angleB, "°");
+                resultHTML += formatResultLine("Range", rangeB, "m");
+                resultHTML += formatResultLine("Time of Flight", timeB, "s");
+                resultHTML += formatResultLine("Max Height", heightMaxB, "m");
+                
+                resultHTML += `<div class="group-title">Optimal Angles</div>`;
+                resultHTML += formatResultLine("Optimal Angle A", toDegrees(optimalA.theta), "°");
+                resultHTML += formatResultLine("Max Range A", optimalA.bestRange, "m");
+                resultHTML += formatResultLine("Optimal Angle B", toDegrees(optimalB.theta), "°");
+                resultHTML += formatResultLine("Max Range B", optimalB.bestRange, "m");
+                
+                showResult(resultHTML);
+                
+                // Draw the optimizer visualization
+                prepareAndDrawOptimizer();
+                
+            } catch (e) {
+                console.error("Optimizer Calc Error:", e);
+                showError("Optimizer Calculation Error: " + e.message);
+                resetAnimation();
+            }
+        }
+
         /**
          * Draws the X and Y axes for the multi-object 1D graph.
          * @param {CanvasRenderingContext2D} ctx - The 2D rendering context of the canvas.
@@ -2026,6 +2755,281 @@
             ctx.stroke();
         }
 
+        // --- Optimizer Drawing Functions ---
+        function prepareAndDrawOptimizer() {
+            if (!optimizerAnimationData.trajectoryA || !optimizerAnimationData.trajectoryB) return;
+            
+            const ctx = trajectoryCanvas.getContext("2d");
+            if (!ctx) return;
+            
+            // Calculate world bounds for scaling
+            const trajectories = [optimizerAnimationData.trajectoryA, optimizerAnimationData.trajectoryB];
+            const optimals = [optimizerAnimationData.optimalA, optimizerAnimationData.optimalB];
+            
+            let maxX = 0, maxY = 0;
+            [...trajectories, ...optimals].forEach(traj => {
+                if (traj && traj.range) {
+                    maxX = Math.max(maxX, traj.range);
+                }
+                if (traj && traj.heightMax) {
+                    maxY = Math.max(maxY, traj.heightMax);
+                }
+            });
+            
+            // Add some padding
+            maxX *= 1.15;
+            maxY *= 1.15;
+            
+            const canvasWidth = trajectoryCanvas.width;
+            const canvasHeight = trajectoryCanvas.height;
+            const margin = 40;
+            
+            // Calculate scale and offsets
+            globalScale = Math.min(
+                (canvasWidth - 2 * margin) / maxX,
+                (canvasHeight - 2 * margin) / maxY
+            );
+            globalOffsetX = margin;
+            globalOffsetY = canvasHeight - margin;
+            
+            // Set global flight time for animation
+            global_t_flight = Math.max(optimizerAnimationData.trajectoryA.time, optimizerAnimationData.trajectoryB.time);
+            
+            drawOptimizerVisualization();
+            resetAnimation();
+        }
+
+        function drawOptimizerVisualization() {
+            const ctx = trajectoryCanvas.getContext("2d");
+            if (!ctx) return;
+            
+            ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+            
+            // Draw background and axes
+            drawOptimizerBackground(ctx);
+            
+            // Draw legend
+            drawOptimizerLegend(ctx);
+            
+            // Draw envelopes if enabled
+            if (document.getElementById("showTrajectoryA").checked && document.getElementById("showEnvelopeA").checked) {
+                drawTrajectoryEnvelope(ctx, optimizerAnimationData.trajectoryA, optimizerColors.trajectoryA);
+            }
+            if (document.getElementById("showTrajectoryB").checked && document.getElementById("showEnvelopeB").checked) {
+                drawTrajectoryEnvelope(ctx, optimizerAnimationData.trajectoryB, optimizerColors.trajectoryB);
+            }
+            
+            // Draw optimal paths if enabled
+            if (document.getElementById("showOptimalPaths").checked) {
+                drawSingleTrajectory(ctx, optimizerAnimationData.optimalA, optimizerColors.optimalA, 2, false);
+                drawSingleTrajectory(ctx, optimizerAnimationData.optimalB, optimizerColors.optimalB, 2, false);
+            }
+            
+            // Draw current trajectories
+            if (document.getElementById("showTrajectoryA").checked) {
+                drawSingleTrajectory(ctx, optimizerAnimationData.trajectoryA, optimizerColors.trajectoryA, 3, true);
+            }
+            if (document.getElementById("showTrajectoryB").checked) {
+                drawSingleTrajectory(ctx, optimizerAnimationData.trajectoryB, optimizerColors.trajectoryB, 3, true);
+            }
+        }
+
+        function drawOptimizerBackground(ctx) {
+            const canvasWidth = trajectoryCanvas.width;
+            const canvasHeight = trajectoryCanvas.height;
+            
+            // Draw ground line
+            ctx.strokeStyle = "var(--axis-color)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, globalOffsetY);
+            ctx.lineTo(canvasWidth, globalOffsetY);
+            ctx.stroke();
+            
+            // Draw vertical line at origin
+            ctx.beginPath();
+            ctx.moveTo(globalOffsetX, 0);
+            ctx.lineTo(globalOffsetX, canvasHeight);
+            ctx.stroke();
+        }
+
+        function drawOptimizerLegend(ctx) {
+            const canvasWidth = trajectoryCanvas.width;
+            const legendX = canvasWidth - 120; // Position from right edge
+            const legendY = 15;
+            const lineLength = 20;
+            const lineSpacing = 20;
+            const textOffset = 25;
+            
+            ctx.font = "12px Arial";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            
+            let currentY = legendY;
+            
+            // Only show legend items for visible trajectories
+            if (document.getElementById("showTrajectoryA").checked) {
+                // Trajectory A (thick line)
+                ctx.strokeStyle = optimizerColors.trajectoryA;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(legendX, currentY);
+                ctx.lineTo(legendX + lineLength, currentY);
+                ctx.stroke();
+                ctx.fillStyle = optimizerColors.trajectoryA;
+                ctx.fillText("Trajectory A", legendX + textOffset, currentY);
+                currentY += lineSpacing;
+            }
+            
+            if (document.getElementById("showTrajectoryB").checked) {
+                // Trajectory B (thick line)
+                ctx.strokeStyle = optimizerColors.trajectoryB;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(legendX, currentY);
+                ctx.lineTo(legendX + lineLength, currentY);
+                ctx.stroke();
+                ctx.fillStyle = optimizerColors.trajectoryB;
+                ctx.fillText("Trajectory B", legendX + textOffset, currentY);
+                currentY += lineSpacing;
+            }
+            
+            if (document.getElementById("showOptimalPaths").checked) {
+                // Optimal A (thin line)
+                ctx.strokeStyle = optimizerColors.optimalA;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(legendX, currentY);
+                ctx.lineTo(legendX + lineLength, currentY);
+                ctx.stroke();
+                ctx.fillStyle = optimizerColors.optimalA;
+                ctx.fillText("Optimal A", legendX + textOffset, currentY);
+                currentY += lineSpacing;
+                
+                // Optimal B (thin line)
+                ctx.strokeStyle = optimizerColors.optimalB;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(legendX, currentY);
+                ctx.lineTo(legendX + lineLength, currentY);
+                ctx.stroke();
+                ctx.fillStyle = optimizerColors.optimalB;
+                ctx.fillText("Optimal B", legendX + textOffset, currentY);
+                currentY += lineSpacing;
+            }
+            
+            if ((document.getElementById("showTrajectoryA").checked && document.getElementById("showEnvelopeA").checked) ||
+                (document.getElementById("showTrajectoryB").checked && document.getElementById("showEnvelopeB").checked)) {
+                // Envelope indicator (dotted line example)
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = "#888";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(legendX, currentY);
+                ctx.lineTo(legendX + lineLength, currentY);
+                ctx.stroke();
+                ctx.setLineDash([]); // Reset line dash
+                ctx.fillStyle = "#888";
+                ctx.fillText("Envelope", legendX + textOffset, currentY);
+            }
+        }
+
+        function drawTrajectoryEnvelope(ctx, trajectory, color) {
+            if (!trajectory) return;
+            
+            const v = trajectory.v;
+            const g = trajectory.g;
+            const h = trajectory.h;
+            
+            // Calculate envelope bounds
+            const xMax = Math.sqrt((v * v / g) * ((v * v / g) + 2 * h));
+            const numPoints = 100;
+            
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 6]);
+            ctx.globalAlpha = 0.6;
+            
+            ctx.beginPath();
+            for (let i = 0; i <= numPoints; i++) {
+                const x = xMax * (i / numPoints);
+                const y = h + (v * v) / (2 * g) - (g * x * x) / (2 * v * v);
+                
+                const canvasX = globalOffsetX + x * globalScale;
+                const canvasY = globalOffsetY - y * globalScale;
+                
+                if (i === 0) {
+                    ctx.moveTo(canvasX, canvasY);
+                } else {
+                    ctx.lineTo(canvasX, canvasY);
+                }
+            }
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function drawSingleTrajectory(ctx, trajectory, color, lineWidth, showProjectile) {
+            if (!trajectory) return;
+            
+            const v = trajectory.v;
+            const theta = trajectory.theta;
+            const g = trajectory.g;
+            const h = trajectory.h;
+            const time = trajectory.time;
+            
+            const numPoints = 100;
+            
+            // Draw trajectory path
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            for (let i = 0; i <= numPoints; i++) {
+                const t = time * (i / numPoints);
+                const x = v * Math.cos(theta) * t;
+                const y = h + v * Math.sin(theta) * t - 0.5 * g * t * t;
+                
+                const canvasX = globalOffsetX + x * globalScale;
+                const canvasY = globalOffsetY - y * globalScale;
+                
+                if (i === 0) {
+                    ctx.moveTo(canvasX, canvasY);
+                } else {
+                    ctx.lineTo(canvasX, canvasY);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw projectile at current animation time if requested
+            if (showProjectile && autoAnimating) {
+                const currentTime = Math.min(animationCurrentTime(), time);
+                const x = v * Math.cos(theta) * currentTime;
+                const y = h + v * Math.sin(theta) * currentTime - 0.5 * g * currentTime * currentTime;
+                
+                const ballX = globalOffsetX + x * globalScale;
+                const ballY = globalOffsetY - y * globalScale;
+                
+                // Draw glowing projectile
+                ctx.save();
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.arc(ballX, ballY, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function animationCurrentTime() {
+            const sliderValue = parseFloat(trajectorySlider.value);
+            return (sliderValue / 100) * global_t_flight;
+        }
+
         // --- Animation & Slider Control ---
         function updateAnimationFrame() {
             const ctx = trajectoryCanvas.getContext("2d");
@@ -2042,6 +3046,13 @@
                 prepareAndDrawMultiObject1DGraph(); // Redraw static graph
                 drawMultiObject1DCurrentState(ctx, t_current); // Draw dynamic state
                 updateStateDisplayMultiObject(t_current);
+            } else if (mode === "optimizer") {
+                if (!isFinite(global_t_flight)) return;
+                if (global_t_flight > TOLERANCE) {
+                    t_current = (sliderValue / 100) * global_t_flight;
+                }
+                drawOptimizerVisualization(); // Redraw with animation
+                updateOptimizerStateDisplay(t_current);
             } else { // Basic and Design modes (2D)
                 if (!isFinite(global_t_flight)) return;
                 if (global_t_flight > TOLERANCE) {
@@ -2056,7 +3067,15 @@
         function startAutoAnimation() {
             if (autoAnimating) return;
             const mode = getSelectedMode();
-            let totalTime = (mode === "multiObject1D") ? globalMaxTime : global_t_flight;
+            let totalTime;
+            
+            if (mode === "multiObject1D") {
+                totalTime = globalMaxTime;
+            } else if (mode === "optimizer") {
+                totalTime = global_t_flight;
+            } else {
+                totalTime = global_t_flight;
+            }
 
             if (!isFinite(totalTime) || totalTime <= 0) return;
 
@@ -2120,6 +3139,15 @@
                     const ctx = trajectoryCanvas.getContext("2d");
                     if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
                     updateStateDisplayMultiObject(0);
+                }
+            } else if (mode === "optimizer") {
+                if (optimizerAnimationData.trajectoryA && optimizerAnimationData.trajectoryB) {
+                    drawOptimizerVisualization();
+                    updateOptimizerStateDisplay(0);
+                } else {
+                    const ctx = trajectoryCanvas.getContext("2d");
+                    if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+                    updateOptimizerStateDisplay(0);
                 }
             } else { // 2D modes
                 if (globalPoints && globalPoints.length > 0) {
@@ -2233,6 +3261,45 @@
             stateDisplayValues.innerHTML = html;
         }
 
+        // NEW: State Display Update for Optimizer
+        function updateOptimizerStateDisplay(t) {
+            let html = `<p><strong>Time:</strong> <span>${t.toFixed(2)} s</span></p>`;
+            
+            if (optimizerAnimationData.trajectoryA && document.getElementById("showTrajectoryA").checked) {
+                const trajA = optimizerAnimationData.trajectoryA;
+                const x_A = trajA.v * Math.cos(trajA.theta) * t;
+                const y_A = trajA.h + trajA.v * Math.sin(trajA.theta) * t - 0.5 * trajA.g * t * t;
+                const vx_A = trajA.v * Math.cos(trajA.theta);
+                const vy_A = trajA.v * Math.sin(trajA.theta) - trajA.g * t;
+                const speed_A = Math.sqrt(vx_A * vx_A + vy_A * vy_A);
+                
+                html += `
+                    <div class="group-title" style="margin-top: 1rem; color: ${optimizerColors.trajectoryA};">Trajectory A</div>
+                    <p><strong>Position:</strong> <span>(${x_A.toFixed(2)}, ${y_A.toFixed(2)}) m</span></p>
+                    <p><strong>Velocity:</strong> <span>(${vx_A.toFixed(2)}, ${vy_A.toFixed(2)}) m/s</span></p>
+                    <p><strong>Speed:</strong> <span>${speed_A.toFixed(2)} m/s</span></p>
+                `;
+            }
+            
+            if (optimizerAnimationData.trajectoryB && document.getElementById("showTrajectoryB").checked) {
+                const trajB = optimizerAnimationData.trajectoryB;
+                const x_B = trajB.v * Math.cos(trajB.theta) * t;
+                const y_B = trajB.h + trajB.v * Math.sin(trajB.theta) * t - 0.5 * trajB.g * t * t;
+                const vx_B = trajB.v * Math.cos(trajB.theta);
+                const vy_B = trajB.v * Math.sin(trajB.theta) - trajB.g * t;
+                const speed_B = Math.sqrt(vx_B * vx_B + vy_B * vy_B);
+                
+                html += `
+                    <div class="group-title" style="margin-top: 1rem; color: ${optimizerColors.trajectoryB};">Trajectory B</div>
+                    <p><strong>Position:</strong> <span>(${x_B.toFixed(2)}, ${y_B.toFixed(2)}) m</span></p>
+                    <p><strong>Velocity:</strong> <span>(${vx_B.toFixed(2)}, ${vy_B.toFixed(2)}) m/s</span></p>
+                    <p><strong>Speed:</strong> <span>${speed_B.toFixed(2)} m/s</span></p>
+                `;
+            }
+            
+            stateDisplayValues.innerHTML = html;
+        }
+
 
         // --- Main Calculation Dispatcher ---
         function calculate() {
@@ -2246,6 +3313,10 @@
                      clearMessages();
                      showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
                      calculateMultiObject1DMode();
+                } else if (mode === "optimizer") { // NEW
+                     clearMessages();
+                     showNote("Optimizer Mode: Compare two projectile trajectories. Use optimization to find maximum range angles. Visualize trajectory envelopes.");
+                     calculateOptimizerMode();
                 } else {
                     const accInput = getFloatValue("acceleration");
                     const g = (isFinite(accInput) && accInput > 0) ? accInput : G_DEFAULT;
