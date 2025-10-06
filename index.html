@@ -2858,8 +2858,12 @@
             
             // Draw optimal paths if enabled
             if (document.getElementById("showOptimalPaths").checked) {
-                drawSingleTrajectory(ctx, optimizerAnimationData.optimalA, optimizerColors.optimalA, 2, false);
-                drawSingleTrajectory(ctx, optimizerAnimationData.optimalB, optimizerColors.optimalB, 2, false);
+                if (document.getElementById("showTrajectoryA").checked) {
+                    drawSingleTrajectory(ctx, optimizerAnimationData.optimalA, optimizerColors.optimalA, 2, false);
+                }
+                if (document.getElementById("showTrajectoryB").checked) {
+                    drawSingleTrajectory(ctx, optimizerAnimationData.optimalB, optimizerColors.optimalB, 2, false);
+                }
             }
             
             // Draw current trajectories
@@ -2932,27 +2936,31 @@
             }
             
             if (document.getElementById("showOptimalPaths").checked) {
-                // Optimal A (thin line)
-                ctx.strokeStyle = optimizerColors.optimalA;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(legendX, currentY);
-                ctx.lineTo(legendX + lineLength, currentY);
-                ctx.stroke();
-                ctx.fillStyle = optimizerColors.optimalA;
-                ctx.fillText("Optimal A", legendX + textOffset, currentY);
-                currentY += lineSpacing;
+                // Optimal A (thin line) - only if Trajectory A is also shown
+                if (document.getElementById("showTrajectoryA").checked) {
+                    ctx.strokeStyle = optimizerColors.optimalA;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(legendX, currentY);
+                    ctx.lineTo(legendX + lineLength, currentY);
+                    ctx.stroke();
+                    ctx.fillStyle = optimizerColors.optimalA;
+                    ctx.fillText("Optimal A", legendX + textOffset, currentY);
+                    currentY += lineSpacing;
+                }
                 
-                // Optimal B (thin line)
-                ctx.strokeStyle = optimizerColors.optimalB;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(legendX, currentY);
-                ctx.lineTo(legendX + lineLength, currentY);
-                ctx.stroke();
-                ctx.fillStyle = optimizerColors.optimalB;
-                ctx.fillText("Optimal B", legendX + textOffset, currentY);
-                currentY += lineSpacing;
+                // Optimal B (thin line) - only if Trajectory B is also shown
+                if (document.getElementById("showTrajectoryB").checked) {
+                    ctx.strokeStyle = optimizerColors.optimalB;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(legendX, currentY);
+                    ctx.lineTo(legendX + lineLength, currentY);
+                    ctx.stroke();
+                    ctx.fillStyle = optimizerColors.optimalB;
+                    ctx.fillText("Optimal B", legendX + textOffset, currentY);
+                    currentY += lineSpacing;
+                }
             }
             
             if ((document.getElementById("showTrajectoryA").checked && document.getElementById("showEnvelopeA").checked) ||
