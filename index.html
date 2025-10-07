@@ -112,6 +112,7 @@
       align-items: flex-start;
       min-height: 100vh;
       transition: background-color 0.3s ease, color 0.3s ease;
+      overflow-y: scroll; /* Always show vertical scrollbar to prevent horizontal shift */
     }
 
     .wrapper {
@@ -119,13 +120,13 @@
       max-width: 1200px;
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1rem;
     }
 
     .top-container {
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1rem;
     }
 
     @media (min-width: 900px) {
@@ -134,40 +135,54 @@
       }
     }
 
-    /* Optimizer-specific layout: inputs top-left, sticky graph top-right, results bottom */
+    /* Optimizer-specific layout: title top, inputs left, sticky graph right, results bottom */
     .wrapper.optimizer-mode {
       display: grid;
-      grid-template-columns: 500px 600px;
-      grid-template-rows: auto auto;
+      grid-template-columns: 450px 1fr;
+      grid-template-rows: auto auto auto;
       gap: 1rem;
-      max-width: none;
+      max-width: 1200px; /* Same as regular modes */
       min-height: 100vh;
       align-items: start;
       justify-content: center;
     }
 
+    .wrapper.optimizer-mode #titleContainer {
+      grid-column: 1 / -1; /* Span full width */
+      grid-row: 1;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
     .wrapper.optimizer-mode .top-container {
       grid-column: 1;
-      grid-row: 1;
+      grid-row: 2;
       display: block;
       margin: 0;
     }
 
     .wrapper.optimizer-mode #trajectoryPanel {
       grid-column: 2;
-      grid-row: 1;
+      grid-row: 2;
       position: sticky;
-      top: 1rem;
+      top: calc(1rem + var(--title-height, 80px)); /* Account for sticky title */
       height: fit-content;
-      max-height: calc(100vh - 2rem);
+      max-height: calc(100vh - 2rem - var(--title-height, 80px));
       overflow-y: auto;
       margin: 0;
       align-self: start;
+      padding-top: 1rem; /* Reduce top padding to bring title up */
+    }
+
+    .wrapper.optimizer-mode #trajectoryPanel h2 {
+      margin-top: 0; /* Remove top margin from title */
+      margin-bottom: 0.5rem; /* Reduce bottom margin */
     }
 
     .wrapper.optimizer-mode #optimizerResultContainer {
       grid-column: 1;
-      grid-row: 2;
+      grid-row: 3;
       margin-top: 2rem;
     }
 
@@ -256,17 +271,22 @@
     @media (max-width: 1200px) {
       .wrapper.optimizer-mode {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
+        grid-template-rows: auto auto auto auto;
       }
-      
-      .wrapper.optimizer-mode .top-container {
+
+      .wrapper.optimizer-mode #titleContainer {
         grid-column: 1;
         grid-row: 1;
       }
       
-      .wrapper.optimizer-mode #trajectoryPanel {
+      .wrapper.optimizer-mode .top-container {
         grid-column: 1;
         grid-row: 2;
+      }
+      
+      .wrapper.optimizer-mode #trajectoryPanel {
+        grid-column: 1;
+        grid-row: 3;
         position: relative;
         top: auto;
         height: auto;
@@ -276,7 +296,7 @@
       
       .wrapper.optimizer-mode #optimizerResultContainer {
         grid-column: 1;
-        grid-row: 3;
+        grid-row: 4;
         margin-top: 1rem;
       }
     }
@@ -289,6 +309,14 @@
       flex: 1;
       border: 1px solid var(--border-color);
       transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Sticky top card */
+    #titleContainer {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2rem 0.5rem 2rem; /* Reduced bottom padding from 1rem to 0.5rem */
     }
 
     h1 {
@@ -309,7 +337,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem; /* Reduced from 1rem to 0.5rem */
       flex-wrap: wrap;
       gap: 0.75rem;
     }
@@ -383,6 +411,7 @@
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
+      align-items: center; /* Ensure buttons are vertically centered */
     }
 
     .modeToggle input[type="radio"] {
@@ -414,6 +443,47 @@
     @media (prefers-color-scheme: dark) {
       .modeToggle input[type="radio"]:checked + label {
         color: #ffffff;
+      }
+    }
+
+    /* Mobile dropdown for mode selection */
+    .modeDropdown {
+      display: none; /* Hidden by default */
+      position: relative;
+    }
+
+    .modeDropdown select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--button-border);
+      border-radius: var(--border-radius);
+      background-color: var(--button-bg);
+      color: var(--text-color);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1rem;
+      padding-right: 3rem;
+    }
+
+    .modeDropdown select:focus {
+      outline: none;
+      border-color: var(--input-focus-border);
+      box-shadow: 0 0 0 3px var(--input-focus-shadow);
+    }
+
+    /* Show dropdown on mobile, hide buttons */
+    @media (max-width: 768px) {
+      .modeToggle {
+        display: none;
+      }
+      
+      .modeDropdown {
+        display: block;
       }
     }
 
@@ -484,7 +554,7 @@
 
     /* --- Trajectory Panel --- */
     #trajectoryPanel {
-      margin-top: 2rem;
+      margin-top: 0;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -785,23 +855,37 @@
 </head>
 <body>
   <div class="wrapper">
+    <!-- New top card with title and mode selection -->
+    <div class="container" id="titleContainer">
+      <div class="header">
+        <h1>Kinematics Calculator</h1>
+        <div class="modeToggle">
+          <input type="radio" name="mode" id="mode1D" value="1d" checked />
+          <label for="mode1D">1D</label>
+          <input type="radio" name="mode" id="mode2D" value="basic" />
+          <label for="mode2D">2D</label>
+          <input type="radio" name="mode" id="modeDesign" value="design" />
+          <label for="modeDesign">Design</label>
+          <input type="radio" name="mode" id="modeMultiObject1D" value="multiObject1D" />
+          <label for="modeMultiObject1D">Multi-Object 1D</label>
+          <input type="radio" name="mode" id="modeOptimizer" value="optimizer" />
+          <label for="modeOptimizer">Optimizer</label>
+        </div>
+        <div class="modeDropdown">
+          <select id="modeSelect">
+            <option value="1d">1D Kinematics</option>
+            <option value="basic">2D Projectile</option>
+            <option value="design">Design Mode</option>
+            <option value="multiObject1D">Multi-Object 1D</option>
+            <option value="optimizer">Optimizer</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
     <div class="top-container" id="mainContainer">
       <div class="container" id="inputContainer">
-        <div class="header">
-          <h1>Kinematics Calculator</h1>
-          <div class="modeToggle">
-            <input type="radio" name="mode" id="mode1D" value="1d" checked />
-            <label for="mode1D">1D</label>
-            <input type="radio" name="mode" id="mode2D" value="basic" />
-            <label for="mode2D">2D</label>
-            <input type="radio" name="mode" id="modeDesign" value="design" />
-            <label for="modeDesign">Design</label>
-            <input type="radio" name="mode" id="modeMultiObject1D" value="multiObject1D" />
-            <label for="modeMultiObject1D">Multi-Object 1D</label>
-            <input type="radio" name="mode" id="modeOptimizer" value="optimizer" />
-            <label for="modeOptimizer">Optimizer</label>
-          </div>
-        </div>
+        <h2>Inputs</h2>
         <div id="oneDInputs">
           <p class="note">Fill in <strong>exactly three</strong> of the following five fields. The two missing variables will be calculated.</p>
           <div class="form-group">
@@ -1188,6 +1272,21 @@
       // --- Event Listeners ---
       document.addEventListener("DOMContentLoaded", () => {
           modeRadios.forEach(radio => radio.addEventListener("change", handleModeChange));
+          
+          // Mobile dropdown mode selector
+          const modeSelect = document.getElementById("modeSelect");
+          if (modeSelect) {
+            modeSelect.addEventListener("change", function() {
+              const selectedValue = this.value;
+              // Sync with radio buttons
+              const radioToCheck = document.querySelector(`input[name="mode"][value="${selectedValue}"]`);
+              if (radioToCheck) {
+                radioToCheck.checked = true;
+                handleModeChange();
+              }
+            });
+          }
+          
           // Attach listeners to all number inputs for debounced calculation
           allNumberInputs.forEach(input => input.addEventListener("input", debounce(calculate, 250)));
           if (startStopButton) startStopButton.addEventListener("click", toggleAnimation);
@@ -1303,6 +1402,13 @@
 
       // --- Mode Switching Logic ---
       function handleModeChange() {
+          // Sync dropdown with radio buttons
+          const mode = getSelectedMode();
+          const modeSelect = document.getElementById("modeSelect");
+          if (modeSelect && modeSelect.value !== mode) {
+            modeSelect.value = mode;
+          }
+          
           updateModeVisibility();
           calculate();
       }
@@ -1595,7 +1701,7 @@
       function handleOptimizerDisplayChange() {
           const mode = getSelectedMode();
           if (mode === "optimizer") {
-              drawOptimizerVisualization(); // Redraw with new display settings
+              prepareAndDrawOptimizer(); // Recalculate scale and redraw with new display settings
           }
       }
 
@@ -2799,12 +2905,38 @@
             const ctx = trajectoryCanvas.getContext("2d");
             if (!ctx) return;
             
-            // Calculate world bounds for scaling
-            const trajectories = [optimizerAnimationData.trajectoryA, optimizerAnimationData.trajectoryB];
-            const optimals = [optimizerAnimationData.optimalA, optimizerAnimationData.optimalB];
+            // Calculate world bounds for scaling - ONLY include visible trajectories
+            const showA = document.getElementById("showTrajectoryA").checked;
+            const showB = document.getElementById("showTrajectoryB").checked;
+            const showEnvelopeA = document.getElementById("showEnvelopeA").checked;
+            const showEnvelopeB = document.getElementById("showEnvelopeB").checked;
+            
+            let trajectoriesToInclude = [];
+            let optimalsToInclude = [];
+            
+            if (showA) {
+                trajectoriesToInclude.push(optimizerAnimationData.trajectoryA);
+                optimalsToInclude.push(optimizerAnimationData.optimalA);
+            }
+            if (showB) {
+                trajectoriesToInclude.push(optimizerAnimationData.trajectoryB);
+                optimalsToInclude.push(optimizerAnimationData.optimalB);
+            }
+            
+            // If nothing is visible, use default scale
+            if (trajectoriesToInclude.length === 0) {
+                globalScale = 1;
+                globalOffsetX = 40;
+                globalOffsetY = trajectoryCanvas.height - 40;
+                drawOptimizerVisualization();
+                resetAnimation();
+                return;
+            }
             
             let maxX = 0, maxY = 0;
-            [...trajectories, ...optimals].forEach(traj => {
+            
+            // Include trajectory and optimal bounds
+            [...trajectoriesToInclude, ...optimalsToInclude].forEach(traj => {
                 if (traj && traj.range) {
                     maxX = Math.max(maxX, traj.range);
                 }
@@ -2812,6 +2944,23 @@
                     maxY = Math.max(maxY, traj.heightMax);
                 }
             });
+            
+            // Include envelope bounds if envelopes are visible
+            if (showA && showEnvelopeA && optimizerAnimationData.trajectoryA) {
+                const traj = optimizerAnimationData.trajectoryA;
+                const envelopeMaxX = Math.sqrt((traj.v * traj.v / traj.g) * ((traj.v * traj.v / traj.g) + 2 * traj.h));
+                const envelopeMaxY = traj.h + (traj.v * traj.v) / (2 * traj.g);
+                maxX = Math.max(maxX, envelopeMaxX);
+                maxY = Math.max(maxY, envelopeMaxY);
+            }
+            
+            if (showB && showEnvelopeB && optimizerAnimationData.trajectoryB) {
+                const traj = optimizerAnimationData.trajectoryB;
+                const envelopeMaxX = Math.sqrt((traj.v * traj.v / traj.g) * ((traj.v * traj.v / traj.g) + 2 * traj.h));
+                const envelopeMaxY = traj.h + (traj.v * traj.v) / (2 * traj.g);
+                maxX = Math.max(maxX, envelopeMaxX);
+                maxY = Math.max(maxY, envelopeMaxY);
+            }
             
             // Add some padding
             maxX *= 1.15;
@@ -2829,8 +2978,11 @@
             globalOffsetX = margin;
             globalOffsetY = canvasHeight - margin;
             
-            // Set global flight time for animation
-            global_t_flight = Math.max(optimizerAnimationData.trajectoryA.time, optimizerAnimationData.trajectoryB.time);
+            // Set global flight time for animation - only from visible trajectories
+            let maxTime = 0;
+            if (showA) maxTime = Math.max(maxTime, optimizerAnimationData.trajectoryA.time);
+            if (showB) maxTime = Math.max(maxTime, optimizerAnimationData.trajectoryB.time);
+            global_t_flight = maxTime || 1; // Default to 1 if no trajectories visible
             
             drawOptimizerVisualization();
             resetAnimation();
@@ -2879,19 +3031,102 @@
             const canvasWidth = trajectoryCanvas.width;
             const canvasHeight = trajectoryCanvas.height;
             
-            // Draw ground line
-            ctx.strokeStyle = "var(--axis-color)";
-            ctx.lineWidth = 1;
+            // Draw smart scale and grid
+            drawSmartScale(ctx, canvasWidth, canvasHeight);
+            
+            // Draw ground line (thicker than grid)
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(0, globalOffsetY);
             ctx.lineTo(canvasWidth, globalOffsetY);
             ctx.stroke();
             
-            // Draw vertical line at origin
+            // Draw vertical line at origin (thicker than grid)
             ctx.beginPath();
             ctx.moveTo(globalOffsetX, 0);
             ctx.lineTo(globalOffsetX, canvasHeight);
             ctx.stroke();
+        }
+
+        function drawSmartScale(ctx, canvasWidth, canvasHeight) {
+            // Calculate world dimensions
+            const worldWidth = (canvasWidth - 2 * 40) / globalScale;
+            const worldHeight = (canvasHeight - 2 * 40) / globalScale;
+            
+            // Smart interval selection
+            function getSmartInterval(range) {
+                const targetDivisions = 5; // Aim for about 5-8 divisions
+                const rawInterval = range / targetDivisions;
+                
+                // Round to nice numbers
+                const magnitude = Math.pow(10, Math.floor(Math.log10(rawInterval)));
+                const normalized = rawInterval / magnitude;
+                
+                let niceInterval;
+                if (normalized <= 1) niceInterval = magnitude;
+                else if (normalized <= 2) niceInterval = 2 * magnitude;
+                else if (normalized <= 5) niceInterval = 5 * magnitude;
+                else niceInterval = 10 * magnitude;
+                
+                return niceInterval;
+            }
+            
+            const xInterval = getSmartInterval(worldWidth);
+            const yInterval = getSmartInterval(worldHeight);
+            
+            // Draw grid and labels
+            ctx.save();
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            
+            // Grid style
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--axis-color');
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 4]);
+            
+            // Text style
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
+            
+            // Vertical grid lines and X labels
+            for (let x = 0; x <= worldWidth; x += xInterval) {
+                if (x === 0) continue; // Skip origin
+                const canvasX = globalOffsetX + x * globalScale;
+                
+                // Grid line
+                ctx.beginPath();
+                ctx.moveTo(canvasX, 0);
+                ctx.lineTo(canvasX, canvasHeight);
+                ctx.stroke();
+                
+                // Label
+                ctx.fillText(`${x.toFixed(x < 1 ? 1 : 0)}m`, canvasX, globalOffsetY + 5);
+            }
+            
+            // Horizontal grid lines and Y labels
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let y = 0; y <= worldHeight; y += yInterval) {
+                if (y === 0) continue; // Skip origin
+                const canvasY = globalOffsetY - y * globalScale;
+                
+                // Grid line
+                ctx.beginPath();
+                ctx.moveTo(0, canvasY);
+                ctx.lineTo(canvasWidth, canvasY);
+                ctx.stroke();
+                
+                // Label
+                ctx.fillText(`${y.toFixed(y < 1 ? 1 : 0)}m`, globalOffsetX - 5, canvasY);
+            }
+            
+            // Origin label
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'top';
+            ctx.fillText('0', globalOffsetX - 5, globalOffsetY + 5);
+            
+            ctx.restore();
         }
 
         function drawOptimizerLegend(ctx) {
@@ -3096,7 +3331,8 @@
                 if (global_t_flight > TOLERANCE) {
                     t_current = (sliderValue / 100) * global_t_flight;
                 }
-                drawOptimizerVisualization(); // Redraw with animation
+                drawOptimizerVisualization(); // Redraw static visualization
+                drawOptimizerProjectiles(ctx, t_current); // Draw projectiles at current time
                 updateOptimizerStateDisplay(t_current);
             } else { // Basic and Design modes (2D)
                 if (!isFinite(global_t_flight)) return;
@@ -3304,6 +3540,63 @@
                 });
             }
             stateDisplayValues.innerHTML = html;
+        }
+
+        // NEW: Draw Optimizer Projectiles at specific time
+        function drawOptimizerProjectiles(ctx, t) {
+            if (!optimizerAnimationData.trajectoryA || !optimizerAnimationData.trajectoryB) return;
+            
+            const projectileRadius = 6;
+            
+            // Draw Trajectory A projectile if visible and in flight
+            if (document.getElementById("showTrajectoryA").checked && 
+                optimizerAnimationData.trajectoryA && 
+                t <= optimizerAnimationData.trajectoryA.time) {
+                
+                const trajA = optimizerAnimationData.trajectoryA;
+                const x_A = trajA.v * Math.cos(trajA.theta) * t;
+                const y_A = trajA.h + trajA.v * Math.sin(trajA.theta) * t - 0.5 * trajA.g * t * t;
+                
+                if (y_A >= 0) { // Only draw if above ground
+                    const canvasX_A = globalOffsetX + x_A * globalScale;
+                    const canvasY_A = globalOffsetY - y_A * globalScale;
+                    
+                    ctx.save();
+                    ctx.fillStyle = optimizerColors.trajectoryA;
+                    ctx.beginPath();
+                    ctx.arc(canvasX_A, canvasY_A, projectileRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+            
+            // Draw Trajectory B projectile if visible and in flight
+            if (document.getElementById("showTrajectoryB").checked && 
+                optimizerAnimationData.trajectoryB && 
+                t <= optimizerAnimationData.trajectoryB.time) {
+                
+                const trajB = optimizerAnimationData.trajectoryB;
+                const x_B = trajB.v * Math.cos(trajB.theta) * t;
+                const y_B = trajB.h + trajB.v * Math.sin(trajB.theta) * t - 0.5 * trajB.g * t * t;
+                
+                if (y_B >= 0) { // Only draw if above ground
+                    const canvasX_B = globalOffsetX + x_B * globalScale;
+                    const canvasY_B = globalOffsetY - y_B * globalScale;
+                    
+                    ctx.save();
+                    ctx.fillStyle = optimizerColors.trajectoryB;
+                    ctx.beginPath();
+                    ctx.arc(canvasX_B, canvasY_B, projectileRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
         }
 
         // NEW: State Display Update for Optimizer
