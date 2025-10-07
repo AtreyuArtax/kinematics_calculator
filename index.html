@@ -2784,16 +2784,22 @@
             const availableHeight = canvasHeight * (1 - marginFactor * 2);
             const rangeX = (maxX - minX);
             const rangeY = (maxY - minY);
-            globalScale = Math.min(
-                (Math.abs(rangeX) < TOLERANCE) ? 1 : availableWidth / rangeX,
-                (Math.abs(rangeY) < TOLERANCE) ? 1 : availableHeight / rangeY
-            );
-            globalScale = Math.max(1e-6, globalScale);
-            globalScale = Math.min(1e6, globalScale);
-            const trajWidthScaled = rangeX * globalScale;
-            globalOffsetX = (canvasWidth - trajWidthScaled) / 2 - minX * globalScale;
+            
+            // Use separate X and Y scaling for 2D modes
+            globalScaleX = (Math.abs(rangeX) < TOLERANCE) ? 1 : availableWidth / rangeX;
+            globalScaleY = (Math.abs(rangeY) < TOLERANCE) ? 1 : availableHeight / rangeY;
+            globalScaleX = Math.max(1e-6, globalScaleX);
+            globalScaleX = Math.min(1e6, globalScaleX);
+            globalScaleY = Math.max(1e-6, globalScaleY);
+            globalScaleY = Math.min(1e6, globalScaleY);
+            
+            // Set globalScale to X scale for backward compatibility
+            globalScale = globalScaleX;
+            
+            const trajWidthScaled = rangeX * globalScaleX;
+            globalOffsetX = (canvasWidth - trajWidthScaled) / 2 - minX * globalScaleX;
             // Set globalOffsetY so that the lowest point appears near the bottom margin
-            globalOffsetY = canvasHeight * (1 - marginFactor) + minY * globalScale;
+            globalOffsetY = canvasHeight * (1 - marginFactor) + minY * globalScaleY;
             resetAnimation();
         }
 
@@ -2805,12 +2811,12 @@
             // Draw axes with a hardcoded neutral dark gray color
             ctx.strokeStyle = "#555555";
             ctx.lineWidth = 1;
-            const originY_canvas = globalOffsetY - (0 * globalScale);
+            const originY_canvas = globalOffsetY - (0 * globalScaleY);
             ctx.beginPath();
             ctx.moveTo(0, originY_canvas);
             ctx.lineTo(trajectoryCanvas.width, originY_canvas);
             ctx.stroke();
-            const originX_canvas = globalOffsetX + (0 * globalScale);
+            const originX_canvas = globalOffsetX + (0 * globalScaleX);
             ctx.beginPath();
             ctx.moveTo(originX_canvas, 0);
             ctx.lineTo(originX_canvas, trajectoryCanvas.height);
@@ -2818,8 +2824,8 @@
             // Draw the trajectory path using a hardcoded blue color (#1e90ff)
             ctx.beginPath();
             globalPoints.forEach((pt, i) => {
-                const canvasX = globalOffsetX + pt.x * globalScale;
-                const canvasY = globalOffsetY - pt.y * globalScale;
+                const canvasX = globalOffsetX + pt.x * globalScaleX;
+                const canvasY = globalOffsetY - pt.y * globalScaleY;
                 if (i === 0) {
                     ctx.moveTo(canvasX, canvasY);
                 } else {
@@ -2849,7 +2855,7 @@
                 peakPoint = globalPoints.reduce((max, p) => p.y > max.y ? p : max, startPoint);
             }
             drawMarker(ctx, startPoint, "green", "Start");
-            if (peakPoint.y > Math.max(startPoint.y, endPoint.y) + (0.01 / globalScale)) {
+            if (peakPoint.y > Math.max(startPoint.y, endPoint.y) + (0.01 / globalScaleY)) {
                 drawMarker(ctx, peakPoint, "orange", "Peak");
             }
             drawMarker(ctx, endPoint, "red", "Landing");
@@ -2857,8 +2863,8 @@
 
         function drawMarker(ctx, pt, color, label) {
             if (!pt) return;
-            const cx = globalOffsetX + pt.x * globalScale;
-            const cy = globalOffsetY - pt.y * globalScale;
+            const cx = globalOffsetX + pt.x * globalScaleX;
+            const cy = globalOffsetY - pt.y * globalScaleY;
             ctx.beginPath();
             ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
             ctx.fillStyle = color;
@@ -2887,8 +2893,8 @@
             const x_current = globalVix * t_current;
             // Add the global vertical shift so the projectile follows the shifted trajectory
             const y_current = globalViy * t_current - 0.5 * globalG * t_current * t_current + globalVerticalShift;
-            const ballX = globalOffsetX + x_current * globalScale;
-            const ballY = globalOffsetY - y_current * globalScale;
+            const ballX = globalOffsetX + x_current * globalScaleX;
+            const ballY = globalOffsetY - y_current * globalScaleY;
             ctx.beginPath();
             ctx.arc(ballX, ballY, 6, 0, 2 * Math.PI);
             ctx.fillStyle = "blue";
@@ -2970,11 +2976,15 @@
             const canvasHeight = trajectoryCanvas.height;
             const margin = 40;
             
-            // Calculate scale and offsets
-            globalScale = Math.min(
-                (canvasWidth - 2 * margin) / maxX,
-                (canvasHeight - 2 * margin) / maxY
-            );
+            // Calculate separate scales for X and Y to maximize canvas usage
+            const scaleX = (canvasWidth - 2 * margin) / maxX;
+            const scaleY = (canvasHeight - 2 * margin) / maxY;
+            
+            // Use separate scales instead of uniform scaling
+            globalScaleX = scaleX;
+            globalScaleY = scaleY;
+            globalScale = scaleX; // Keep for compatibility with drawing functions that use globalScale
+            
             globalOffsetX = margin;
             globalOffsetY = canvasHeight - margin;
             
@@ -3050,9 +3060,9 @@
         }
 
         function drawSmartScale(ctx, canvasWidth, canvasHeight) {
-            // Calculate world dimensions
-            const worldWidth = (canvasWidth - 2 * 40) / globalScale;
-            const worldHeight = (canvasHeight - 2 * 40) / globalScale;
+            // Calculate world dimensions using separate scales
+            const worldWidth = (canvasWidth - 2 * 40) / globalScaleX;
+            const worldHeight = (canvasHeight - 2 * 40) / globalScaleY;
             
             // Smart interval selection
             function getSmartInterval(range) {
@@ -3092,7 +3102,7 @@
             // Vertical grid lines and X labels
             for (let x = 0; x <= worldWidth; x += xInterval) {
                 if (x === 0) continue; // Skip origin
-                const canvasX = globalOffsetX + x * globalScale;
+                const canvasX = globalOffsetX + x * globalScaleX;
                 
                 // Grid line
                 ctx.beginPath();
@@ -3109,7 +3119,7 @@
             ctx.textBaseline = 'middle';
             for (let y = 0; y <= worldHeight; y += yInterval) {
                 if (y === 0) continue; // Skip origin
-                const canvasY = globalOffsetY - y * globalScale;
+                const canvasY = globalOffsetY - y * globalScaleY;
                 
                 // Grid line
                 ctx.beginPath();
@@ -3236,8 +3246,8 @@
                 const x = xMax * (i / numPoints);
                 const y = h + (v * v) / (2 * g) - (g * x * x) / (2 * v * v);
                 
-                const canvasX = globalOffsetX + x * globalScale;
-                const canvasY = globalOffsetY - y * globalScale;
+                const canvasX = globalOffsetX + x * globalScaleX;
+                const canvasY = globalOffsetY - y * globalScaleY;
                 
                 if (i === 0) {
                     ctx.moveTo(canvasX, canvasY);
@@ -3273,8 +3283,8 @@
                 const x = v * Math.cos(theta) * t;
                 const y = h + v * Math.sin(theta) * t - 0.5 * g * t * t;
                 
-                const canvasX = globalOffsetX + x * globalScale;
-                const canvasY = globalOffsetY - y * globalScale;
+                const canvasX = globalOffsetX + x * globalScaleX;
+                const canvasY = globalOffsetY - y * globalScaleY;
                 
                 if (i === 0) {
                     ctx.moveTo(canvasX, canvasY);
@@ -3290,8 +3300,8 @@
                 const x = v * Math.cos(theta) * currentTime;
                 const y = h + v * Math.sin(theta) * currentTime - 0.5 * g * currentTime * currentTime;
                 
-                const ballX = globalOffsetX + x * globalScale;
-                const ballY = globalOffsetY - y * globalScale;
+                const ballX = globalOffsetX + x * globalScaleX;
+                const ballY = globalOffsetY - y * globalScaleY;
                 
                 // Draw glowing projectile
                 ctx.save();
@@ -3558,8 +3568,8 @@
                 const y_A = trajA.h + trajA.v * Math.sin(trajA.theta) * t - 0.5 * trajA.g * t * t;
                 
                 if (y_A >= 0) { // Only draw if above ground
-                    const canvasX_A = globalOffsetX + x_A * globalScale;
-                    const canvasY_A = globalOffsetY - y_A * globalScale;
+                    const canvasX_A = globalOffsetX + x_A * globalScaleX;
+                    const canvasY_A = globalOffsetY - y_A * globalScaleY;
                     
                     ctx.save();
                     ctx.fillStyle = optimizerColors.trajectoryA;
@@ -3583,8 +3593,8 @@
                 const y_B = trajB.h + trajB.v * Math.sin(trajB.theta) * t - 0.5 * trajB.g * t * t;
                 
                 if (y_B >= 0) { // Only draw if above ground
-                    const canvasX_B = globalOffsetX + x_B * globalScale;
-                    const canvasY_B = globalOffsetY - y_B * globalScale;
+                    const canvasX_B = globalOffsetX + x_B * globalScaleX;
+                    const canvasY_B = globalOffsetY - y_B * globalScaleY;
                     
                     ctx.save();
                     ctx.fillStyle = optimizerColors.trajectoryB;
