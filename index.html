@@ -2523,9 +2523,15 @@
                         resultHTML += `<div class="group-title">${objA.label} and ${objB.label} Meeting Points</div>`;
                         times.forEach(t => {
                             const x_meet_A = objA.x0 + objA.v0 * t + 0.5 * objA.a * t * t;
+                            // Calculate instantaneous velocities at meeting time: v(t) = v₀ + at
+                            const v_A = objA.v0 + objA.a * t;
+                            const v_B = objB.v0 + objB.a * t;
+                            
                             meetingPoints.push({ t, x: x_meet_A, objects: [objA.id, objB.id] });
                             resultHTML += formatResultLine(`Time`, t, "s");
                             resultHTML += formatResultLine(`Position`, x_meet_A, "m");
+                            resultHTML += formatResultLine(`${objA.label} Velocity`, v_A, "m/s");
+                            resultHTML += formatResultLine(`${objB.label} Velocity`, v_B, "m/s");
                         });
                     } else if (Math.abs(A_quad) > TOLERANCE || Math.abs(B_quad) > TOLERANCE || Math.abs(C_quad) > TOLERANCE) {
                          // Only show "never meet" if they are not identical and no meeting points found
