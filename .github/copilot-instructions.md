@@ -1,6 +1,6 @@
 # Copilot instructions for this repo
 
-Scope: Static, client-only web app (no build/test tooling). All UI, physics logic, and rendering live in `index.html` (and duplicated in `kinematics_calculator.html`). Keep both files in sync when changing shared logic; treat `index.html` as the source of truth.
+Scope: Static, client-only web app (no build/test tooling). All UI, physics logic, and rendering live in `index.html`.
 
 Big picture
 - Modes (radio buttons): `1d`, `basic` (2D), `design` (2D with landing angle), `multiObject1D`.
@@ -9,7 +9,6 @@ Big picture
 
 Key files
 - `index.html`: single page app with inline CSS and JS (main entry). IDs and functions below are defined here.
-- `kinematics_calculator.html`: duplicate of `index.html`. Mirror changes that alter shared behavior.
 - `README.md`: user-facing features, physics background, and modes.
 
 Runtime workflow (dev/use)

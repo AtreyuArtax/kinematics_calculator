@@ -311,12 +311,28 @@
       transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
+    /* Make input container narrower on larger screens to match optimizer layout */
+    @media (min-width: 900px) {
+      #inputContainer {
+        max-width: 450px;
+        flex: 0 0 450px;
+      }
+    }
+
     /* Sticky top card */
     #titleContainer {
       position: sticky;
       top: 0;
       z-index: 100;
       padding: 1rem 2rem 0.5rem 2rem; /* Reduced bottom padding from 1rem to 0.5rem */
+      transition: transform 0.3s ease;
+    }
+
+    /* Mobile: Allow title to be transformed/hidden */
+    @media (max-width: 768px) {
+      #titleContainer.mobile-scrolled {
+        transform: translateY(-100%);
+      }
     }
 
     h1 {
@@ -505,7 +521,8 @@
     .result {
       background-color: var(--success-bg);
       color: var(--success-text);
-      border-color: var(--success-border);
+      border: none;
+      box-shadow: none;
     }
 
     .note {
@@ -1394,6 +1411,29 @@
           calculate();
       });
 
+      // Mobile title scroll behavior - hide title on scroll for small screens
+      if (window.innerWidth <= 768) {
+          let lastScrollY = 0;
+          let titleContainer = document.getElementById('titleContainer');
+          
+          function handleMobileScroll() {
+              const currentScrollY = window.scrollY;
+              
+              // Hide title when scrolling down past 100px
+              if (currentScrollY > 100 && currentScrollY > lastScrollY) {
+                  titleContainer.classList.add('mobile-scrolled');
+              } 
+              // Show title when scrolling up
+              else if (currentScrollY < lastScrollY) {
+                  titleContainer.classList.remove('mobile-scrolled');
+              }
+              
+              lastScrollY = currentScrollY;
+          }
+          
+          window.addEventListener('scroll', handleMobileScroll, { passive: true });
+      }
+
       // --- Debounce Function ---
       function debounce(func, wait) {
           let timeout;
@@ -1583,6 +1623,14 @@
       }
 
       // --- Clear Input Functions ---
+      function clearCanvas() {
+          const trajectoryCanvas = document.getElementById("trajectoryCanvas");
+          if (trajectoryCanvas) {
+              const ctx = trajectoryCanvas.getContext("2d");
+              ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+          }
+      }
+
       function clear1DInputs() {
           document.getElementById("v1d").value = "";
           document.getElementById("vf1d").value = "";
@@ -1601,6 +1649,7 @@
           document.getElementById("time").value = "";
           clearMessages();
           resetAnimation();
+          clearCanvas();
           showNote("2D Mode: Fill in <strong>exactly three</strong> of V<sub>i</sub>, &Delta;x, &Delta;y, &theta;.");
       }
 
@@ -1610,6 +1659,7 @@
           document.getElementById("landingAngle").value = "";
           clearMessages();
           resetAnimation();
+          clearCanvas();
           showNote("Design Mode: Fill in target &Delta;x, &Delta;y, and landing angle &phi;.");
       }
 
@@ -1941,6 +1991,7 @@
             if (providedCount !== 3) {
                 showNote("2D: Please fill in exactly <strong>three</strong> of V<sub>i</sub>, &Delta;x, &Delta;y, &theta;.");
                 resetAnimation();
+                clearCanvas(); // Clear canvas when insufficient inputs
                 return;
             }
             if (missingKeys.length !== 1) {
@@ -2162,16 +2213,19 @@
             if (isNaN(dx_target) || isNaN(dy_target) || isNaN(landingAngleDeg)) {
                 showNote("Design Mode: Please fill in target &Delta;x, &Delta;y, and desired landing angle &phi;.");
                 resetAnimation();
+                clearCanvas(); // Clear canvas when insufficient inputs
                 return;
             }
             if (Math.abs(g) < TOLERANCE) {
                 showError("Design mode requires non-zero gravitational acceleration (g).");
                 resetAnimation();
+                clearCanvas();
                 return;
             }
             if (Math.abs(dx_target) < TOLERANCE) {
                 showError("Design mode requires a non-zero Horizontal Displacement (&Delta;x).");
                 resetAnimation();
+                clearCanvas();
                 return;
             }
             try {
@@ -2294,19 +2348,35 @@
             }
 
             // Validate inputs for each object
-           
+            let hasValidData = false;
+            
             for (const obj of objectsToProcess) {
+                // Check if any inputs are provided for this object
+                const x0Input = document.getElementById(`obj${obj.id}_x0`).value.trim();
+                const v0Input = document.getElementById(`obj${obj.id}_v0`).value.trim();
+                const aInput = document.getElementById(`obj${obj.id}_a`).value.trim();
+                
+                // If no inputs provided for this object, skip it
+                if (x0Input === "" && v0Input === "" && aInput === "") {
+                    continue;
+                }
+                
+                // If some but not all inputs provided, show note
                 if (isNaN(obj.x0) || isNaN(obj.v0) || isNaN(obj.a)) {
-                    showError(`Multi-Object 1D: Please ensure all inputs (Initial Position, Initial Velocity, Acceleration) are valid numbers for ${obj.label}.`);
+                    showNote(`Multi-Object 1D: Please ensure all inputs (Initial Position, Initial Velocity, Acceleration) are filled for ${obj.label}.`);
                     resetAnimation();
+                    clearCanvas();
                     return;
                 }
+                
                 multiObjectData.push(obj); // Store valid input data
+                hasValidData = true;
             }
 
-            if (multiObjectData.length < 2) {
-                showNote("Multi-Object 1D Mode: Please enter data for at least two objects.");
+            if (!hasValidData || multiObjectData.length < 2) {
+                showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
                 resetAnimation();
+                clearCanvas();
                 return;
             }
 
