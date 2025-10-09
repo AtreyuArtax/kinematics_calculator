@@ -1611,6 +1611,9 @@
                showNote("Optimizer Mode: Compare two projectile trajectories. Use sliders for real-time visualization. Optimize for maximum range angles.");
           }
           resetAnimation();
+          
+          // Scroll to top when changing modes for better UX
+          window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
       // NEW: Toggle Object 3 inputs
