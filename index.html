@@ -734,6 +734,55 @@
         background-color: var(--input-bg);
     }
 
+    /* More compact spacing for optimizer inputs */
+    #optimizerInputs .object-input-section {
+        padding: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    #optimizerInputs .object-input-section h3 {
+        font-size: 1rem;
+        margin-bottom: 0.4rem;
+        padding-bottom: 0.3rem;
+    }
+
+    #optimizerInputs .slider-group {
+        gap: 0.2rem;
+        margin-bottom: 0.4rem;
+    }
+
+    #optimizerInputs .slider-group label {
+        margin-bottom: 0.1rem;
+    }
+
+    #optimizerInputs .slider-control-row {
+        gap: 0.4rem;
+    }
+
+    #optimizerInputs .add-object-button {
+        margin-top: 0.4rem;
+        margin-bottom: 0.2rem;
+    }
+
+    /* Specific spacing for the Add Trajectory B button */
+    #addTrajectoryBButton {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* More compact clear button in optimizer mode */
+    #optimizerInputs .clear-button {
+        margin-top: 0.5rem;
+        margin-bottom: 0;
+    }
+
+    /* Compact the introductory note in optimizer mode */
+    #optimizerInputs .note {
+        margin-bottom: 0.75rem;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.9rem;
+    }
+
     .object-input-section h3 {
         font-size: 1.05rem;
         color: var(--primary-color);
@@ -1146,7 +1195,9 @@
                 <button id="optimizeA" class="add-object-button" style="background-color: #1e90ff; border-color: #1e90ff;">★ Optimize A for Max Range</button>
             </div>
 
-            <div class="object-input-section">
+            <button id="addTrajectoryBButton" class="add-object-button">Add Trajectory B</button>
+
+            <div class="object-input-section" id="trajectoryBInputs">
                 <h3>Trajectory B <label style="float: right; font-size: 0.85em; font-weight: normal;"><input type="checkbox" id="showTrajectoryB" checked style="margin-right: 4px;">Show</label></h3>
                 
                 <div class="form-group slider-group">
@@ -1248,7 +1299,7 @@
               Show Trajectory A Envelope
             </label>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="showEnvelopeBOption">
             <label>
               <input type="checkbox" id="showEnvelopeB" checked style="margin-right: 8px;">
               Show Trajectory B Envelope
@@ -1297,6 +1348,7 @@
       let multiObjectData = []; // Stores {x0, v0, a, color, label} for each object (input data)
       const objectColors = ["#1e90ff", "#ff4500", "#32cd32"]; // Blue, OrangeRed, LimeGreen
       let showObject3 = false; // State for showing/hiding object 3 inputs
+      let showTrajectoryB = false; // State for showing/hiding trajectory B inputs in optimizer mode
       let globalMaxTime = 0; // Max time for 1D multi-object graph
       let globalMinPosition = 0; // Min position for 1D multi-object graph
       let globalMaxPosition = 0; // Max position for 1D multi-object graph
@@ -1336,6 +1388,9 @@
       const optimizerInputsDiv = document.getElementById("optimizerInputs"); // NEW
       const object3InputsDiv = document.getElementById("object3Inputs"); // NEW
       const addObject3Button = document.getElementById("addObject3Button"); // NEW
+      const trajectoryBInputsDiv = document.getElementById("trajectoryBInputs"); // NEW
+      const addTrajectoryBButton = document.getElementById("addTrajectoryBButton"); // NEW
+      const showEnvelopeBOption = document.getElementById("showEnvelopeBOption"); // NEW
       const gravityBox = document.getElementById("gravityBox");
       const startStopButton = document.getElementById("startStopButton");
       const resetButton = document.getElementById("resetButton");
@@ -1400,6 +1455,7 @@
             trajectorySlider.addEventListener("change", handleSliderChange);
           }
           if (addObject3Button) addObject3Button.addEventListener("click", toggleObject3Inputs); // NEW
+          if (addTrajectoryBButton) addTrajectoryBButton.addEventListener("click", toggleTrajectoryBInputs); // NEW
           
           // Clear button event listeners
           const clear1DButton = document.getElementById("clear1D");
@@ -1587,6 +1643,26 @@
               showObject3 = false;
           }
 
+          // Manage Trajectory B visibility in optimizer mode
+          if (mode === "optimizer") {
+              trajectoryBInputsDiv.classList.toggle("hidden", !showTrajectoryB);
+              addTrajectoryBButton.textContent = showTrajectoryB ? "Remove Trajectory B" : "Add Trajectory B";
+              // Also control the display option for Trajectory B envelope
+              showEnvelopeBOption.classList.toggle("hidden", !showTrajectoryB);
+              // Sync checkbox state with section visibility
+              if (!showTrajectoryB) {
+                  document.getElementById("showTrajectoryB").checked = false;
+              }
+          } else {
+              trajectoryBInputsDiv.classList.add("hidden");
+              addTrajectoryBButton.textContent = "Add Trajectory B";
+              showTrajectoryB = false;
+              // Hide the envelope option when not in optimizer mode
+              showEnvelopeBOption.classList.add("hidden");
+              // Reset checkbox when leaving optimizer mode
+              document.getElementById("showTrajectoryB").checked = true;
+          }
+
           // Update trajectory title based on mode
           if (trajectoryTitle) {
               if (mode === "multiObject1D") {
@@ -1608,7 +1684,7 @@
           } else if (mode === 'multiObject1D') {
                showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
           } else if (mode === 'optimizer') {
-               showNote("Optimizer Mode: Compare two projectile trajectories. Use sliders for real-time visualization. Optimize for maximum range angles.");
+               showNote("Optimizer Mode: Compare projectile trajectories. Start with Trajectory A, then add Trajectory B for comparison. Use sliders for real-time visualization. Optimize for maximum range angles.");
           }
           resetAnimation();
           
@@ -1621,6 +1697,15 @@
           showObject3 = !showObject3;
           updateModeVisibility(); // Re-run visibility update to apply changes
           calculate(); // Recalculate with new object count
+      }
+
+      // NEW: Toggle Trajectory B inputs in optimizer mode
+      function toggleTrajectoryBInputs() {
+          showTrajectoryB = !showTrajectoryB;
+          // Sync checkbox state with section visibility
+          document.getElementById("showTrajectoryB").checked = showTrajectoryB;
+          updateModeVisibility(); // Re-run visibility update to apply changes
+          calculate(); // Recalculate with new trajectory count
       }
 
       // --- Message Display Functions ---
@@ -1791,6 +1876,10 @@
           document.getElementById("showEnvelopeA").checked = true;
           document.getElementById("showEnvelopeB").checked = true;
           document.getElementById("showOptimalPaths").checked = true;
+          
+          // Reset trajectory B visibility to hidden
+          showTrajectoryB = false;
+          updateModeVisibility(); // This will hide trajectory B and reset button text
           
           clearMessages();
           resetAnimation();
@@ -2675,68 +2764,101 @@
             const speedA = getFloatValue("speedA");
             const heightA = getFloatValue("heightA");
             
-            // Get trajectory B parameters
-            const angleB = getFloatValue("angleB");
-            const speedB = getFloatValue("speedB");
-            const heightB = getFloatValue("heightB");
-            
-            // Validate inputs
-            if (isNaN(angleA) || isNaN(speedA) || isNaN(heightA) || 
-                isNaN(angleB) || isNaN(speedB) || isNaN(heightB)) {
-                showNote("Optimizer Mode: Please fill in all trajectory parameters.");
-                resetAnimation();
+            // Validate trajectory A inputs
+            if (isNaN(angleA) || isNaN(speedA) || isNaN(heightA)) {
+                showNote("Optimizer Mode: Please fill in all Trajectory A parameters.");
+                clearCanvas();
                 return;
             }
             
-            if (speedA <= 0 || speedB <= 0) {
-                showError("Initial speeds must be positive.");
-                resetAnimation();
+            if (speedA <= 0) {
+                showError("Initial speed for Trajectory A must be positive.");
+                clearCanvas();
                 return;
             }
             
-            if (angleA < 0.1 || angleA > 89.9 || angleB < 0.1 || angleB > 89.9) {
-                showError("Launch angles must be between 0.1° and 89.9°.");
-                resetAnimation();
+            if (angleA < 0.1 || angleA > 89.9) {
+                showError("Launch angle for Trajectory A must be between 0.1° and 89.9°.");
+                clearCanvas();
                 return;
+            }
+
+            // Get trajectory B parameters only if showTrajectoryB is true
+            let angleB, speedB, heightB;
+            let calculateTrajectoryB = showTrajectoryB;
+            
+            if (showTrajectoryB) {
+                angleB = getFloatValue("angleB");
+                speedB = getFloatValue("speedB");
+                heightB = getFloatValue("heightB");
+                
+                // Validate trajectory B inputs
+                if (isNaN(angleB) || isNaN(speedB) || isNaN(heightB)) {
+                    showNote("Optimizer Mode: Please fill in all Trajectory B parameters.");
+                    clearCanvas();
+                    return;
+                }
+                
+                if (speedB <= 0) {
+                    showError("Initial speed for Trajectory B must be positive.");
+                    clearCanvas();
+                    return;
+                }
+                
+                if (angleB < 0.1 || angleB > 89.9) {
+                    showError("Launch angle for Trajectory B must be between 0.1° and 89.9°.");
+                    clearCanvas();
+                    return;
+                }
             }
             
             try {
-                // Calculate trajectories
+                // Calculate trajectory A
                 const thetaA = toRadians(angleA);
-                const thetaB = toRadians(angleB);
-                
                 const rangeA = optimizerRange(speedA, thetaA, g, heightA);
-                const rangeB = optimizerRange(speedB, thetaB, g, heightB);
                 const timeA = optimizerTimeOfFlight(speedA, thetaA, g, heightA);
-                const timeB = optimizerTimeOfFlight(speedB, thetaB, g, heightB);
                 const heightMaxA = optimizerApexHeight(speedA, thetaA, g, heightA);
-                const heightMaxB = optimizerApexHeight(speedB, thetaB, g, heightB);
                 
-                // Calculate optimal angles
+                // Calculate optimal angle for A
                 const optimalA = optimizeAngle(speedA, g, heightA);
-                const optimalB = optimizeAngle(speedB, g, heightB);
-                
-                // Calculate flight times for optimal trajectories
                 const optimalTimeA = optimizerTimeOfFlight(speedA, optimalA.theta, g, heightA);
-                const optimalTimeB = optimizerTimeOfFlight(speedB, optimalB.theta, g, heightB);
                 
-                // Store animation data
+                // Store trajectory A animation data
                 optimizerAnimationData.trajectoryA = {
                     v: speedA, theta: thetaA, g: g, h: heightA,
                     range: rangeA, time: timeA, heightMax: heightMaxA
-                };
-                optimizerAnimationData.trajectoryB = {
-                    v: speedB, theta: thetaB, g: g, h: heightB,
-                    range: rangeB, time: timeB, heightMax: heightMaxB
                 };
                 optimizerAnimationData.optimalA = {
                     v: speedA, theta: optimalA.theta, g: g, h: heightA,
                     range: optimalA.bestRange, time: optimalTimeA
                 };
-                optimizerAnimationData.optimalB = {
-                    v: speedB, theta: optimalB.theta, g: g, h: heightB,
-                    range: optimalB.bestRange, time: optimalTimeB
-                };
+                
+                // Calculate trajectory B only if visible
+                let rangeB, timeB, heightMaxB, thetaB, optimalB, optimalTimeB;
+                if (calculateTrajectoryB) {
+                    thetaB = toRadians(angleB);
+                    rangeB = optimizerRange(speedB, thetaB, g, heightB);
+                    timeB = optimizerTimeOfFlight(speedB, thetaB, g, heightB);
+                    heightMaxB = optimizerApexHeight(speedB, thetaB, g, heightB);
+                    
+                    // Calculate optimal angle for B
+                    optimalB = optimizeAngle(speedB, g, heightB);
+                    optimalTimeB = optimizerTimeOfFlight(speedB, optimalB.theta, g, heightB);
+                    
+                    // Store trajectory B animation data
+                    optimizerAnimationData.trajectoryB = {
+                        v: speedB, theta: thetaB, g: g, h: heightB,
+                        range: rangeB, time: timeB, heightMax: heightMaxB
+                    };
+                    optimizerAnimationData.optimalB = {
+                        v: speedB, theta: optimalB.theta, g: g, h: heightB,
+                        range: optimalB.bestRange, time: optimalTimeB
+                    };
+                } else {
+                    // Clear trajectory B data when not visible
+                    optimizerAnimationData.trajectoryB = null;
+                    optimizerAnimationData.optimalB = null;
+                }
                 
                 // Generate results
                 let resultHTML = `<div class="group-title">Optimizer Results</div>`;
@@ -2747,17 +2869,22 @@
                 resultHTML += formatResultLine("Time of Flight", timeA, "s");
                 resultHTML += formatResultLine("Max Height", heightMaxA, "m");
                 
-                resultHTML += `<div class="group-title">Trajectory B</div>`;
-                resultHTML += formatResultLine("Launch Angle, θ<sub>B</sub>", angleB, "°");
-                resultHTML += formatResultLine("Range", rangeB, "m");
-                resultHTML += formatResultLine("Time of Flight", timeB, "s");
-                resultHTML += formatResultLine("Max Height", heightMaxB, "m");
+                if (calculateTrajectoryB) {
+                    resultHTML += `<div class="group-title">Trajectory B</div>`;
+                    resultHTML += formatResultLine("Launch Angle, θ<sub>B</sub>", angleB, "°");
+                    resultHTML += formatResultLine("Range", rangeB, "m");
+                    resultHTML += formatResultLine("Time of Flight", timeB, "s");
+                    resultHTML += formatResultLine("Max Height", heightMaxB, "m");
+                }
                 
                 resultHTML += `<div class="group-title">Optimal Angles</div>`;
                 resultHTML += formatResultLine("Optimal Angle A", toDegrees(optimalA.theta), "°");
                 resultHTML += formatResultLine("Max Range A", optimalA.bestRange, "m");
-                resultHTML += formatResultLine("Optimal Angle B", toDegrees(optimalB.theta), "°");
-                resultHTML += formatResultLine("Max Range B", optimalB.bestRange, "m");
+                
+                if (calculateTrajectoryB) {
+                    resultHTML += formatResultLine("Optimal Angle B", toDegrees(optimalB.theta), "°");
+                    resultHTML += formatResultLine("Max Range B", optimalB.bestRange, "m");
+                }
                 
                 showResult(resultHTML);
                 
@@ -2767,7 +2894,7 @@
             } catch (e) {
                 console.error("Optimizer Calc Error:", e);
                 showError("Optimizer Calculation Error: " + e.message);
-                resetAnimation();
+                clearCanvas();
             }
         }
 
@@ -3072,14 +3199,14 @@
 
         // --- Optimizer Drawing Functions ---
         function prepareAndDrawOptimizer() {
-            if (!optimizerAnimationData.trajectoryA || !optimizerAnimationData.trajectoryB) return;
+            if (!optimizerAnimationData.trajectoryA) return;
             
             const ctx = trajectoryCanvas.getContext("2d");
             if (!ctx) return;
             
             // Calculate world bounds for scaling - ONLY include visible trajectories
             const showA = document.getElementById("showTrajectoryA").checked;
-            const showB = document.getElementById("showTrajectoryB").checked;
+            const showB = document.getElementById("showTrajectoryB").checked && showTrajectoryB; // Only show B if section is visible AND checkbox is checked
             const showEnvelopeA = document.getElementById("showEnvelopeA").checked;
             const showEnvelopeB = document.getElementById("showEnvelopeB").checked;
             
@@ -3090,7 +3217,7 @@
                 trajectoriesToInclude.push(optimizerAnimationData.trajectoryA);
                 optimalsToInclude.push(optimizerAnimationData.optimalA);
             }
-            if (showB) {
+            if (showB && optimizerAnimationData.trajectoryB) {
                 trajectoriesToInclude.push(optimizerAnimationData.trajectoryB);
                 optimalsToInclude.push(optimizerAnimationData.optimalB);
             }
@@ -3157,7 +3284,7 @@
             // Set global flight time for animation - only from visible trajectories
             let maxTime = 0;
             if (showA) maxTime = Math.max(maxTime, optimizerAnimationData.trajectoryA.time);
-            if (showB) maxTime = Math.max(maxTime, optimizerAnimationData.trajectoryB.time);
+            if (showB && optimizerAnimationData.trajectoryB) maxTime = Math.max(maxTime, optimizerAnimationData.trajectoryB.time);
             global_t_flight = maxTime || 1; // Default to 1 if no trajectories visible
             
             drawOptimizerVisualization();
@@ -3180,7 +3307,7 @@
             if (document.getElementById("showTrajectoryA").checked && document.getElementById("showEnvelopeA").checked) {
                 drawTrajectoryEnvelope(ctx, optimizerAnimationData.trajectoryA, optimizerColors.trajectoryA);
             }
-            if (document.getElementById("showTrajectoryB").checked && document.getElementById("showEnvelopeB").checked) {
+            if (document.getElementById("showTrajectoryB").checked && document.getElementById("showEnvelopeB").checked && showTrajectoryB && optimizerAnimationData.trajectoryB) {
                 drawTrajectoryEnvelope(ctx, optimizerAnimationData.trajectoryB, optimizerColors.trajectoryB);
             }
             
@@ -3189,7 +3316,7 @@
                 if (document.getElementById("showTrajectoryA").checked) {
                     drawSingleTrajectory(ctx, optimizerAnimationData.optimalA, optimizerColors.optimalA, 2, false);
                 }
-                if (document.getElementById("showTrajectoryB").checked) {
+                if (document.getElementById("showTrajectoryB").checked && showTrajectoryB && optimizerAnimationData.optimalB) {
                     drawSingleTrajectory(ctx, optimizerAnimationData.optimalB, optimizerColors.optimalB, 2, false);
                 }
             }
@@ -3198,7 +3325,7 @@
             if (document.getElementById("showTrajectoryA").checked) {
                 drawSingleTrajectory(ctx, optimizerAnimationData.trajectoryA, optimizerColors.trajectoryA, 3, true);
             }
-            if (document.getElementById("showTrajectoryB").checked) {
+            if (document.getElementById("showTrajectoryB").checked && showTrajectoryB && optimizerAnimationData.trajectoryB) {
                 drawSingleTrajectory(ctx, optimizerAnimationData.trajectoryB, optimizerColors.trajectoryB, 3, true);
             }
         }
@@ -3580,6 +3707,14 @@
             }
         }
 
+        // --- Helper Functions ---
+        function clearCanvas() {
+            const ctx = trajectoryCanvas.getContext("2d");
+            if (ctx) {
+                ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+            }
+        }
+
         function resetAnimation() {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             autoAnimating = false;
@@ -3598,7 +3733,7 @@
                     updateStateDisplayMultiObject(0);
                 }
             } else if (mode === "optimizer") {
-                if (optimizerAnimationData.trajectoryA && optimizerAnimationData.trajectoryB) {
+                if (optimizerAnimationData.trajectoryA) { // Only need trajectory A to be present
                     drawOptimizerVisualization();
                     updateOptimizerStateDisplay(0);
                 } else {
@@ -3720,7 +3855,7 @@
 
         // NEW: Draw Optimizer Projectiles at specific time
         function drawOptimizerProjectiles(ctx, t) {
-            if (!optimizerAnimationData.trajectoryA || !optimizerAnimationData.trajectoryB) return;
+            if (!optimizerAnimationData.trajectoryA) return; // Only need trajectory A to be present
             
             const projectileRadius = 6;
             
@@ -3751,6 +3886,7 @@
             
             // Draw Trajectory B projectile if visible and in flight
             if (document.getElementById("showTrajectoryB").checked && 
+                showTrajectoryB &&
                 optimizerAnimationData.trajectoryB && 
                 t <= optimizerAnimationData.trajectoryB.time) {
                 
@@ -3795,7 +3931,7 @@
                 `;
             }
             
-            if (optimizerAnimationData.trajectoryB && document.getElementById("showTrajectoryB").checked) {
+            if (optimizerAnimationData.trajectoryB && showTrajectoryB && document.getElementById("showTrajectoryB").checked) {
                 const trajB = optimizerAnimationData.trajectoryB;
                 const x_B = trajB.v * Math.cos(trajB.theta) * t;
                 const y_B = trajB.h + trajB.v * Math.sin(trajB.theta) * t - 0.5 * trajB.g * t * t;
@@ -3828,8 +3964,6 @@
                      showNote("Multi-Object 1D Mode: Enter initial position, initial velocity, and acceleration for each object. The graph will show their positions over time and any meeting points.");
                      calculateMultiObject1DMode();
                 } else if (mode === "optimizer") { // NEW
-                     clearMessages();
-                     showNote("Optimizer Mode: Compare two projectile trajectories. Use optimization to find maximum range angles. Visualize trajectory envelopes.");
                      calculateOptimizerMode();
                 } else {
                     const accInput = getFloatValue("acceleration");
