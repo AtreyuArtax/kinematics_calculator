@@ -1,4 +1,4 @@
-const VERSION = '2025-10-28-1';
+const VERSION = '2026-10-04-1';
 const CACHE_NAME = `kinematics-cache-${VERSION}`;
 const OFFLINE_URL = 'offline.html';
 // Core assets to precache; keep small to avoid OneDrive limits
@@ -8,7 +8,9 @@ const CORE_ASSETS = [
   'manifest.webmanifest',
   'offline.html',
   'icons/icon-192.svg',
-  'icons/icon-512.svg'
+  'icons/icon-512.svg',
+  'icons/icon-192.png',
+  'icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -10,6 +10,7 @@
     <link rel="icon" href="./icons/icon-512.png" sizes="512x512" />
     <link rel="icon" href="./icons/icon-192.svg" sizes="192x192" />
     <link rel="icon" href="./icons/icon-512.svg" sizes="512x512" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" sizes="180x180" />
   <style>
     /* --- Light Mode Variables (Default) --- */
     :root {
@@ -1328,8 +1329,12 @@
       const G_DEFAULT = 9.8; // Default gravitational acceleration
       const TOLERANCE = 1e-9; // For floating-point comparisons
       const ANIMATION_DURATION = 3000; // 3000ms for full animation playback
-      const MEETING_POINT_CLICK_RADIUS = 50; // Pixels radius for clicking a meeting point
+      const MEETING_POINT_CLICK_RADIUS = 50; // Radius in displayed (CSS) pixels for clicking a meeting point
       const GRAPH_MARGIN = 50; // Fixed margin for the multi-object graph axes
+      // Logical drawing size of the canvas. The backing pixel buffer is scaled up by the screen's
+      // pixel ratio (see setupHiDPICanvas) so drawing code always works in these units.
+      const CANVAS_WIDTH = 800;
+      const CANVAS_HEIGHT = 400;
 
       // --- Global State Variables ---
       let globalPoints = []; // Trajectory points
@@ -1399,6 +1404,19 @@
       const stateDisplayValues = document.getElementById("stateValues");
       const trajectoryPanel = document.getElementById("trajectoryPanel");
       const trajectoryCanvas = document.getElementById("trajectoryCanvas");
+
+      // Render the canvas sharply on high-DPI screens: enlarge the pixel buffer and scale the context
+      // once, so all drawing stays in CANVAS_WIDTH x CANVAS_HEIGHT units. Capped at 2x, which is
+      // already sharper than needed when CSS shrinks the canvas on phones.
+      function setupHiDPICanvas() {
+          if (!trajectoryCanvas) return;
+          const ratio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
+          trajectoryCanvas.width = Math.round(CANVAS_WIDTH * ratio);
+          trajectoryCanvas.height = Math.round(CANVAS_HEIGHT * ratio);
+          const ctx = trajectoryCanvas.getContext("2d");
+          if (ctx) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      }
+      setupHiDPICanvas();
       const resultContainer = document.getElementById("resultContainer");
       const optimizerResultContainer = document.getElementById("optimizerResultContainer");
       const messageDiv = document.getElementById("message");
@@ -1591,7 +1609,12 @@
           if (modeSelect && modeSelect.value !== mode) {
             modeSelect.value = mode;
           }
-          
+
+          // globalPoints has a different shape per mode; drop the previous mode's data so the new
+          // mode's drawing code never sees it (calculate() rebuilds it from this mode's inputs).
+          globalPoints = [];
+          globalMeetingPoints = [];
+
           updateModeVisibility();
           calculate();
       }
@@ -1791,13 +1814,6 @@
       }
 
       // --- Clear Input Functions ---
-      function clearCanvas() {
-          const trajectoryCanvas = document.getElementById("trajectoryCanvas");
-          if (trajectoryCanvas) {
-              const ctx = trajectoryCanvas.getContext("2d");
-              ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
-          }
-      }
 
       function clear1DInputs() {
           document.getElementById("v1d").value = "";
@@ -2667,8 +2683,8 @@
             minPosition = Math.min(0, ...allXValues, ...multiObjectData.map(obj => obj.x0));
             maxPosition = Math.max(0, ...allXValues, ...multiObjectData.map(obj => obj.x0));
 
-            const canvasWidth = trajectoryCanvas.width;
-            const canvasHeight = trajectoryCanvas.height;
+            const canvasWidth = CANVAS_WIDTH;
+            const canvasHeight = CANVAS_HEIGHT;
             const availableWidth = canvasWidth - 2 * GRAPH_MARGIN;
             const availableHeight = canvasHeight - 2 * GRAPH_MARGIN;
 
@@ -2946,10 +2962,10 @@
             const ctx = trajectoryCanvas.getContext("2d");
             if (!ctx || globalPoints.length === 0) return;
 
-            ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
             // Draw the axes using the dedicated function
-            drawAxesForMultiObject(ctx, trajectoryCanvas.width, trajectoryCanvas.height, GRAPH_MARGIN);
+            drawAxesForMultiObject(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, GRAPH_MARGIN);
 
             // Draw each object's trajectory
             globalPoints.forEach(obj => {
@@ -3011,7 +3027,7 @@
             ctx.setLineDash([5, 5]); // Dashed line
             ctx.beginPath();
             ctx.moveTo(lineX, GRAPH_MARGIN); // From top margin
-            ctx.lineTo(lineX, trajectoryCanvas.height - GRAPH_MARGIN); // To bottom margin
+            ctx.lineTo(lineX, CANVAS_HEIGHT - GRAPH_MARGIN); // To bottom margin
             ctx.stroke();
             ctx.setLineDash([]); // Reset line dash
 
@@ -3071,8 +3087,8 @@
             const minY = Math.min(0, ...ys);
             const maxY = Math.max(0, ...ys);
             const marginFactor = 0.15;
-            const canvasWidth = trajectoryCanvas.width;
-            const canvasHeight = trajectoryCanvas.height;
+            const canvasWidth = CANVAS_WIDTH;
+            const canvasHeight = CANVAS_HEIGHT;
             const availableWidth = canvasWidth * (1 - marginFactor * 2);
             const availableHeight = canvasHeight * (1 - marginFactor * 2);
             const rangeX = (maxX - minX);
@@ -3100,19 +3116,19 @@
         function drawStaticTrajectory() {
             const ctx = trajectoryCanvas.getContext("2d");
             if (!ctx || globalPoints.length === 0) return;
-            ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             // Draw axes with a hardcoded neutral dark gray color
             ctx.strokeStyle = "#555555";
             ctx.lineWidth = 1;
             const originY_canvas = globalOffsetY - (0 * globalScaleY);
             ctx.beginPath();
             ctx.moveTo(0, originY_canvas);
-            ctx.lineTo(trajectoryCanvas.width, originY_canvas);
+            ctx.lineTo(CANVAS_WIDTH, originY_canvas);
             ctx.stroke();
             const originX_canvas = globalOffsetX + (0 * globalScaleX);
             ctx.beginPath();
             ctx.moveTo(originX_canvas, 0);
-            ctx.lineTo(originX_canvas, trajectoryCanvas.height);
+            ctx.lineTo(originX_canvas, CANVAS_HEIGHT);
             ctx.stroke();
             // Draw the trajectory path using a hardcoded blue color (#1e90ff)
             ctx.beginPath();
@@ -3171,7 +3187,7 @@
             ctx.textBaseline = "bottom";
             let labelX = cx + 8;
             let labelY = cy - 5;
-            if (cx > trajectoryCanvas.width - 50) {
+            if (cx > CANVAS_WIDTH - 50) {
                 ctx.textAlign = "right";
                 labelX = cx - 8;
             }
@@ -3226,7 +3242,7 @@
             if (trajectoriesToInclude.length === 0) {
                 globalScale = 1;
                 globalOffsetX = 40;
-                globalOffsetY = trajectoryCanvas.height - 40;
+                globalOffsetY = CANVAS_HEIGHT - 40;
                 drawOptimizerVisualization();
                 resetAnimation();
                 return;
@@ -3265,8 +3281,8 @@
             maxX *= 1.15;
             maxY *= 1.15;
             
-            const canvasWidth = trajectoryCanvas.width;
-            const canvasHeight = trajectoryCanvas.height;
+            const canvasWidth = CANVAS_WIDTH;
+            const canvasHeight = CANVAS_HEIGHT;
             const margin = 40;
             
             // Calculate separate scales for X and Y to maximize canvas usage
@@ -3295,7 +3311,7 @@
             const ctx = trajectoryCanvas.getContext("2d");
             if (!ctx) return;
             
-            ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             
             // Draw background and axes
             drawOptimizerBackground(ctx);
@@ -3331,8 +3347,8 @@
         }
 
         function drawOptimizerBackground(ctx) {
-            const canvasWidth = trajectoryCanvas.width;
-            const canvasHeight = trajectoryCanvas.height;
+            const canvasWidth = CANVAS_WIDTH;
+            const canvasHeight = CANVAS_HEIGHT;
             
             // Draw smart scale and grid
             drawSmartScale(ctx, canvasWidth, canvasHeight);
@@ -3433,7 +3449,7 @@
         }
 
         function drawOptimizerLegend(ctx) {
-            const canvasWidth = trajectoryCanvas.width;
+            const canvasWidth = CANVAS_WIDTH;
             const legendX = canvasWidth - 120; // Position from right edge
             const legendY = 15;
             const lineLength = 20;
@@ -3711,7 +3727,7 @@
         function clearCanvas() {
             const ctx = trajectoryCanvas.getContext("2d");
             if (ctx) {
-                ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+                ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             }
         }
 
@@ -3729,7 +3745,7 @@
                     updateStateDisplayMultiObject(0);
                 } else {
                     const ctx = trajectoryCanvas.getContext("2d");
-                    if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+                    if (ctx) ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                     updateStateDisplayMultiObject(0);
                 }
             } else if (mode === "optimizer") {
@@ -3738,7 +3754,7 @@
                     updateOptimizerStateDisplay(0);
                 } else {
                     const ctx = trajectoryCanvas.getContext("2d");
-                    if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+                    if (ctx) ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                     updateOptimizerStateDisplay(0);
                 }
             } else { // 2D modes
@@ -3746,7 +3762,7 @@
                      updateAnimationFrame(); // This will call drawStaticTrajectory and drawProjectile(0)
                 } else {
                      const ctx = trajectoryCanvas.getContext("2d");
-                     if (ctx) ctx.clearRect(0, 0, trajectoryCanvas.width, trajectoryCanvas.height);
+                     if (ctx) ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                      updateStateDisplay(0);
                 }
             }
@@ -3776,10 +3792,14 @@
             const rect = trajectoryCanvas.getBoundingClientRect();
             const clickX = event.clientX - rect.left;
             const clickY = event.clientY - rect.top;
+            // The canvas is drawn at a fixed 800x400 but displayed scaled by CSS (e.g. ~350px wide on phones),
+            // so convert meeting points from canvas units to displayed pixels before comparing.
+            const scaleX = rect.width / CANVAS_WIDTH;
+            const scaleY = rect.height / CANVAS_HEIGHT;
 
             for (const mp of globalMeetingPoints) {
-                const canvasX = dataToCanvasX(mp.t);
-                const canvasY = dataToCanvasY(mp.x);
+                const canvasX = dataToCanvasX(mp.t) * scaleX;
+                const canvasY = dataToCanvasY(mp.x) * scaleY;
 
                 const distance = Math.sqrt(
                     Math.pow(clickX - canvasX, 2) + Math.pow(clickY - canvasY, 2)

@@ -11,24 +11,29 @@ A comprehensive web-based calculator for one-dimensional (1D) and two-dimensiona
 - **2D Projectile Motion:** Solve for one unknown among $V_i$, $\Delta x$, $\Delta y$, and $\theta$.
 - **2D Design Mode:** Determine launch angle and initial velocity to hit a target with a given landing angle.
 - **Multi-Object 1D:** Compare the motion of up to three objects with different starting conditions.
+- **Optimizer:** Compare up to two projectiles launched from a height, find the launch angle that maximizes range, and show trajectory envelopes.
 
 ### Visualization
 - **2D Modes:** Trajectory animation with live state display (position, velocity components, speed, and angle).
-- **Multi-Object 1D Mode:** Position-time graph with color-coded objects and meeting point markers.
+- **Optimizer Mode:** Side-by-side trajectories with optional max-range paths and envelopes.
+- **Multi-Object 1D Mode:** Position-time graph with color-coded objects and meeting point markers (tap a meeting point to jump to that time).
 
 ### Interface
 - **Responsive design** supporting various screen sizes.
 - **Light/Dark mode** automatically applied.
 - **Interactive controls** for adding/removing objects, adjusting input parameters, and controlling animations.
+- **Installable and offline-capable** as a Progressive Web App (PWA).
 
 ## How to Use
 
-1.  **Open https://github.com/AtreyuArtax/kinematics_calculator**
+1.  **Open https://atreyuartax.github.io/kinematics_calculator**
 2.  **Select a Mode:**
     * **1D:** For one-dimensional motion. Fill in *exactly three* of the five fields ($V_i$, $V_f$, $a$, $d$, $t$).
     * **2D:** For basic two-dimensional projectile motion. Fill in *exactly three* of $V_i$, $\Delta x$, $\Delta y$, and $\theta$. Time ($t$) is optional for additional state calculation.
     * **Design:** For advanced 2D projectile motion. Fill in target $\Delta x$, $\Delta y$, and the desired landing angle $\phi$.
-3.  **Adjust Gravity (2D Modes):** Modify the "Gravitational Accel., g" field if needed (default is 9.81 m/s²).
+    * **Multi-Object 1D:** Enter initial position, initial velocity, and acceleration for each object.
+    * **Optimizer:** Enter launch angle, speed, and height for trajectory A (and optionally B), then use **★ Optimize** to find the max-range angle.
+3.  **Adjust Gravity (2D Modes):** Modify the "Gravitational Accel., g" field if needed (default is 9.8 m/s²).
 4.  **View Results:** As you input values, the "Results" panel will automatically update with the calculated unknowns and a summary of the trajectory (for 2D modes).
 5.  **Explore Trajectory (2D Modes):**
     * The "Trajectory Visualization" panel will appear.
