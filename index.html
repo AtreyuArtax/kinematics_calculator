@@ -3195,7 +3195,15 @@
               t: providedKeys.includes("t")
           };
 
+          // Errors that explain why the inputs have no forward-in-time solution (shown without the generic prefix).
+          const explain = (html) => Object.assign(new Error(html), { explain: true });
+          const noForwardTime = (why) => explain(`<strong>No solution going forward in time.</strong> ${why}`);
+          const n = stepNum; // 2 decimals with a proper minus sign
+
           try {
+              if (has.t && sol.t < -TOLERANCE) {
+                  throw explain(`<strong>Time can't be negative.</strong> t is measured forward from the start of the motion, so enter t ≥ 0.`);
+              }
               if (has.vi && has.vf && has.t) {
                   if (Math.abs(sol.t) < TOLERANCE) throw new Error("Time (t) cannot be zero.");
                   sol.a = (sol.vf - sol.vi) / sol.t;
@@ -3208,6 +3216,10 @@
                   } else {
                       sol.t = (sol.vf - sol.vi) / sol.a;
                       sol.d = sol.vi * sol.t + 0.5 * sol.a * sol.t * sol.t;
+                      if (sol.t < -TOLERANCE) {
+                          throw noForwardTime(`With a = ${n(sol.a)} m/s², the velocity ${sol.a > 0 ? "increases" : "decreases"}, so it can't go from ${n(sol.vi)} m/s to ${n(sol.vf)} m/s; equation 1 gives t = ${n(sol.t)} s. ` +
+                              `Equation 5 (which has no t) still gives Δd = ${n(sol.d)} m, but that motion can't happen. Check the sign of a or the velocities.`);
+                      }
                   }
               } else if (has.vi && has.vf && has.d) {
                   const v_avg = (sol.vi + sol.vf) / 2;
@@ -3218,7 +3230,9 @@
                   } else {
                       sol.t = sol.d / v_avg;
                   }
-                  if (sol.t < -TOLERANCE) throw new Error("Calculation resulted in negative time.");
+                  if (sol.t < -TOLERANCE) {
+                      throw noForwardTime(`The average velocity, (v<sub>i</sub> + v<sub>f</sub>)/2 = ${n(v_avg)} m/s, points the opposite way to Δd = ${n(sol.d)} m, so equation 2 gives t = ${n(sol.t)} s. Check the signs of Δd and the velocities.`);
+                  }
                   sol.t = Math.max(0, sol.t);
                   if (Math.abs(sol.t) < TOLERANCE) {
                        if(Math.abs(sol.vf - sol.vi) > TOLERANCE) throw new Error("Vf and Vi must be equal if time is zero.");
@@ -3241,12 +3255,16 @@
                       } else { // vi != 0
                           sol.t = -C / B; // d = vi*t
                       }
-                      if (sol.t < -TOLERANCE) throw new Error("Calculation resulted in negative time.");
+                      if (sol.t < -TOLERANCE) {
+                          throw noForwardTime(`With a = 0 the velocity stays at ${n(sol.vi)} m/s, which points the opposite way to Δd = ${n(sol.d)} m, so t = Δd / v = ${n(sol.t)} s. Check the signs of Δd and the velocity.`);
+                      }
                       sol.t = Math.max(0, sol.t);
                       sol.vf = sol.vi + sol.a * sol.t; // Since a=0, vf=vi
                   } else { // Quadratic case: a!=0
                       const disc = B * B - 4 * A * C;
-                      if (disc < -TOLERANCE) throw new Error("No real solution for time.");
+                      if (disc < -TOLERANCE) {
+                          throw explain(`<strong>No solution.</strong> With these values the object never reaches Δd = ${n(sol.d)} m (equation ${has.vi ? 3 : 4} has no real solution for t). Check the signs of Δd, the velocity and a.`);
+                      }
                       
                       const sqrtDisc = Math.sqrt(Math.max(0, disc));
                       const t1 = (-B + sqrtDisc) / (2 * A);
@@ -3258,7 +3276,9 @@
                           
                       const uniqueTimes = [...new Set(validTimes.map(t => t.toPrecision(10)))].map(s => parseFloat(s));
 
-                      if (uniqueTimes.length === 0) throw new Error("No positive real solution for time.");
+                      if (uniqueTimes.length === 0) {
+                          throw noForwardTime(`Both solutions of equation ${has.vi ? 3 : 4} for t are negative (t = ${n(t1)} s and ${n(t2)} s), so the object would have to reach Δd = ${n(sol.d)} m before it started. Check the signs of Δd, the velocity and a.`);
+                      }
 
                       let resultHTML = '';
                       uniqueTimes.sort((a, b) => a - b).forEach((t_sol, index) => {
@@ -3300,12 +3320,16 @@
                       } else { // vf != 0
                           sol.t = C / B; // d = vf*t (since a=0, vi=vf)
                       }
-                      if (sol.t < -TOLERANCE) throw new Error("Calculation resulted in negative time.");
+                      if (sol.t < -TOLERANCE) {
+                          throw noForwardTime(`With a = 0 the velocity stays at ${n(sol.vf)} m/s, which points the opposite way to Δd = ${n(sol.d)} m, so t = Δd / v = ${n(sol.t)} s. Check the signs of Δd and the velocity.`);
+                      }
                       sol.t = Math.max(0, sol.t);
                       sol.vi = sol.vf - sol.a * sol.t;
                   } else { // Quadratic case: a!=0
                       const disc = B * B - 4 * A * C;
-                      if (disc < -TOLERANCE) throw new Error("No real solution for time.");
+                      if (disc < -TOLERANCE) {
+                          throw explain(`<strong>No solution.</strong> With these values the object never reaches Δd = ${n(sol.d)} m (equation ${has.vi ? 3 : 4} has no real solution for t). Check the signs of Δd, the velocity and a.`);
+                      }
 
                       const sqrtDisc = Math.sqrt(Math.max(0, disc));
                       const t1 = (-B + sqrtDisc) / (2 * A);
@@ -3317,7 +3341,9 @@
 
                       const uniqueTimes = [...new Set(validTimes.map(t => t.toPrecision(10)))].map(s => parseFloat(s));
 
-                      if (uniqueTimes.length === 0) throw new Error("No positive real solution for time.");
+                      if (uniqueTimes.length === 0) {
+                          throw noForwardTime(`Both solutions of equation ${has.vi ? 3 : 4} for t are negative (t = ${n(t1)} s and ${n(t2)} s), so the object would have to reach Δd = ${n(sol.d)} m before it started. Check the signs of Δd, the velocity and a.`);
+                      }
 
                       let resultHTML = '';
                       uniqueTimes.sort((a, b) => a - b).forEach((t_sol, index) => {
@@ -3370,8 +3396,12 @@
               showResult(resultHTML);
 
           } catch (e) {
-              console.error("1D Calc Error:", e);
-              showError("1D Calculation Error: " + e.message);
+              if (e.explain) {
+                  showError(e.message);
+              } else {
+                  console.error("1D Calc Error:", e);
+                  showError("1D Calculation Error: " + e.message);
+              }
           }
         }
 
