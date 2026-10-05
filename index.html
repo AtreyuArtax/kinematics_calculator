@@ -47,6 +47,7 @@
       --state-display-border: var(--border-color);
       --state-display-text: var(--text-color);
       --axis-color: rgba(128, 128, 128, 0.5);
+      --tangent-color: #e65100;
       --border-radius: 8px;
       --spacing-unit: 1rem;
     }
@@ -86,6 +87,7 @@
         --state-display-border: var(--border-color);
         --state-display-text: var(--text-color);
         --axis-color: rgba(160, 160, 160, 0.4);
+        --tangent-color: #fb923c;
       }
     }
 
@@ -1822,6 +1824,7 @@
           const gridColor = css.getPropertyValue("--axis-color").trim();
           const bgColor = css.getPropertyValue("--canvas-bg").trim();
           const cursorColor = css.getPropertyValue("--primary-color").trim();
+          const tangentColor = css.getPropertyValue("--tangent-color").trim() || "#e65100";
           const font = (px, weight = 400) => `${weight} ${px}px system-ui, -apple-system, "Segoe UI", sans-serif`;
           const title = g.kind === "d" ? (model ? model.dTitle : "Δd (m)") : g.title;
           const L = 46, R = 10, T = 8, B = opts.timeLabels ? 30 : 8;
@@ -1951,15 +1954,15 @@
           });
           if (opts.showSlopeArea && g.kind === "d") {
               // Tangent at the cursor: its slope is the velocity
-              ctx.lineWidth = 1.5;
+              ctx.lineWidth = 2;
               ctx.setLineDash([6, 4]);
-              model.tracks.forEach(k => {
+              model.tracks.forEach((k, idx) => {
                   const slope = k.v0 + k.a * tc, y0 = g.value(k, tc), span = tMax * 0.2;
                   const t1 = tc - span, t2 = tc + span;
                   ctx.beginPath();
                   ctx.moveTo(X(t1), Y(y0 + slope * (t1 - tc)));
                   ctx.lineTo(X(t2), Y(y0 + slope * (t2 - tc)));
-                  ctx.strokeStyle = k.color;
+                  ctx.strokeStyle = k.tangentColor || (model.tracks.length === 1 ? tangentColor : (idx === 0 ? tangentColor : (idx === 1 ? "#9333ea" : "#059669")));
                   ctx.stroke();
               });
               ctx.setLineDash([]);
