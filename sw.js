@@ -1,4 +1,4 @@
-const VERSION = '2026-10-04-1';
+const VERSION = '2026-10-04-2';
 const CACHE_NAME = `kinematics-cache-${VERSION}`;
 const OFFLINE_URL = 'offline.html';
 // Core assets to precache; keep small to avoid OneDrive limits

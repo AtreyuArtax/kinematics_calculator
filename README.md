@@ -17,6 +17,7 @@ A comprehensive web-based calculator for one-dimensional (1D) and two-dimensiona
 - **2D Modes:** Trajectory animation with live state display (position, velocity components, speed, and angle).
 - **Optimizer Mode:** Side-by-side trajectories with optional max-range paths and envelopes.
 - **Multi-Object 1D Mode:** Position-time graph with color-coded objects and meeting point markers (tap a meeting point to jump to that time).
+- **d–t, v–t and a–t graphs (1D, 2D, Design, Multi-Object):** stacked on a shared time axis with a cursor that follows the animation. "Show slope & area" draws the tangent on d–t (slope = v), shades the area under v–t (= Δd) and a–t (= Δv), and lists the values at the cursor time.
 
 ### Interface
 - **Responsive design** supporting various screen sizes.
@@ -33,9 +34,10 @@ A comprehensive web-based calculator for one-dimensional (1D) and two-dimensiona
     * **Design:** For advanced 2D projectile motion. Fill in target $\Delta x$, $\Delta y$, and the desired landing angle $\phi$.
     * **Multi-Object 1D:** Enter initial position, initial velocity, and acceleration for each object.
     * **Optimizer:** Enter launch angle, speed, and height for trajectory A (and optionally B), then use **★ Optimize** to find the max-range angle.
-3.  **Adjust Gravity (2D Modes):** Modify the "Gravitational Accel., g" field if needed (default is 9.8 m/s²).
+3.  **Adjust Gravity (2D Modes):** Modify the "Vertical Accel., $a_y$" field if needed (default is −9.8 m/s²). Up is positive, so $a_y$ is negative, just like a downward $\Delta d_y$.
 4.  **View Results:** As you input values, the "Results" panel will automatically update with the calculated unknowns and a summary of the trajectory (for 2D modes).
-5.  **Explore Trajectory (2D Modes):**
+5.  **Show Solution Steps (1D, 2D and Multi-Object 1D):** Open "Show solution steps" under the results for a worked solution using the Big 5 equations, e.g. find $t$ in the vertical, then use it in the horizontal, or set two objects' positions equal to find when they meet.
+6.  **Explore Trajectory (2D Modes):**
     * The "Trajectory Visualization" panel will appear.
     * Use the **slider** to manually scrub through the projectile's path.
     * Click **"Start"** to play the animation. The button will change to "Stop".
